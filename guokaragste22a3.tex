@@ -1,0 +1,1454 @@
+\documentclass{amsart}
+\usepackage{amsmath,amsfonts,amssymb,amsthm, esint}
+\usepackage[english]{babel}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{dsfont}
+\usepackage{comment}
+
+\usepackage[colorlinks,citecolor=blue]{hyperref}
+\usepackage{epsfig,graphicx} 
+\usepackage[usenames]{color}
+%\usepackage{colortbl}
+
+%\usepackage[backend=biber, firstinits=true, doi=false, isbn=false, url=false, style=numeric, maxbibnames=99]{biblatex}
+%\renewbibmacro{in:}{}
+%\bibliography{biblio-sewing-two.bib}
+
+
+%\usepackage[colorlinks=true, allcolors=black]{hyperref}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{definition}[theorem]{Definition}
+
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{openpb}[theorem]{Open Problem}
+\newtheorem{claim}[theorem]{Claim}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{example}[theorem]{Example}
+
+\numberwithin{equation}{section}
+%\renewcommand{\theequation}{\arabic{section}.\arabic{equation}}
+\numberwithin{figure}{section}
+
+
+\newtheorem{examples}[theorem]{Examples}
+
+%% sets
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+
+\def\eps{\varepsilon}
+\def\E{\mathbb{E}\,}
+\def\Var{\mathrm{Var}\,}
+\def\supp{\mathrm{supp}\,}
+\def\dist{\mathrm{dist}\,}
+\def\Reach{\mathrm{Reach}\,}
+\def\mX{\mathcal{X}}
+\def\mY{\mathcal{Y}}
+\def\1{\mathbf{1}}
+\def\v{\overline}
+\newcommand{\res}{\llcorner}
+
+\newcommand{\HH}{{\mathcal H}}
+\renewcommand{\H}{\HH^1}
+
+\begin{document}
+
+\author{Tao Guo}
+\address{Southeast China University, China
+}
+%\email{stepanov.eugene@gmail.com}
+
+
+\author{Nikita Karagodin}
+\address{St.Petersburg Branch of the Steklov Mathematical Institute of the Russian Academy of Sciences,
+	Fontanka 27,
+	191023 St.Petersburg, Russia
+}
+%\email{stepanov.eugene@gmail.com}
+
+
+%	\author{Nikita Puchkin}
+%	\address{
+%		HSE University 
+%		and Institute for Information Transmission Problems, Moscow
+%		%
+%		%	Faculty of Computer Sciences, Higher School of Economics, Moscow
+%	}
+%	\email{npuchkin@hse.ru}
+%	
+%	\author{Vladimir Spokoiny}
+%	\address{
+%		Weierstrass Institute of Applied Analysis and Stochastics, Berlin
+%		\and
+%		Faculty of Computer Sciences, Higher School of Economics, Moscow
+%	}
+%	\email{spokoiny@wias-berlin.de}
+%	
+	\author{Eugene Stepanov}
+	\address{St.Petersburg Branch of the Steklov Mathematical Institute of the Russian Academy of Sciences,
+		Fontanka 27,
+		191023 St.Petersburg, Russia
+		\and
+		Department of Mathematical Physics, Faculty of Mathematics and Mechanics,
+		St. Petersburg State University, 
+		%Universitetskij pr.~28, Old Peterhof,
+		%198504 St.Petersburg, Russia%, email: stepanov.eugene@gmail.com
+%		\and ITMO University, St. Petersburg,
+		\and
+		HSE University, Moscow
+	}
+\email{stepanov.eugene@gmail.com}
+
+%	
+%	\author{Dario Trevisan}
+%	\address{Dario Trevisan, Dipartimento di Matematica, Universit\`a di Pisa \\
+%		Largo Bruno Pontecorvo 5 \\ I-56127, Pisa}
+%	\email{dario.trevisan@unipi.it}
+%	
+	\thanks{		%The work %of the first, second and third author 
+		The research has been financed by Huawei.
+%		The work of the third author has been also partially financed by
+%		%	the Program of the Presidium of the Russian
+%		%		Academy of Sciences \#01 'Fundamental Mathematics and its Applications'
+%		%		under grant PRAS-18-01 and
+%		the RFBR grant \#20-01-00630A. The fourth author was partially supported by GNAMPA-INdAM 2020 project ``Problemi di ottimizzazione con vincoli via trasporto ottimo e incertezza'' and University of Pisa, Project PRA 2018-49.
+}
+%	\date{\today}
+	
+	\title{Optimal functional product quantization}
+\begin{abstract}
+We will discuss and compare two approaches for quantization of vectorial signals on the input to a computational device: quantizing the whole signal and optimizing the input error, or quantizing separately the components
+but optimizing the output error.
+\end{abstract}
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+Suppose that a $d$-dimensional vectorial signal $Z=(X_1, \ldots, X_d)$ with scalar components $X_i$ be input to a computational device which
+produces the value $f(Z)= f(X_1, \ldots, X_d)$ of the given function $f$ on the output. We want to quantize (i.e. substitute with a signal which might have only a discrete set of values) separately and independently the components of input, that is,
+the scalar signals $X_i$, so as to maximize the quality of the output, i.e. to minimize the expectation of the error on the output
+between $Z$ and that on its quantized version, 
+once $Z$ is a random vector with a given distribution law (i.e. the common distribution law of 
+$(X_1, \ldots, X_d)$). We will call this a functional product quantization problem.
+The general problem statement is described formally below.
+
+\subsection{Functional product quantization problem}	
+Assume $d$ sets $\mX_1, \ldots, \mX_d$, with random elements 
+$X_i\in \mX_i$, $Y\in \mY$, their common distribution law being the given Borel probability measure $\mu$, i.e.\
+\[\textrm{law}(X, Y)=\mu.\]
+Finally assume that a Borel function $f\colon \mX \times \mY \to \R$ be given.
+For $(n_1, n_2)\in \N\times \N$	one has to find the quantization maps
+\[q_1\colon \mX\to \mX,  \#q_1(\mX) \leq n_1, \quad q_2 \colon \mY \to \mY, \# q_2(\mY) \leq n_2 \,\]
+such that for a given distance $d$ on $\mathbb{R}$ 
+\[
+L_f(q_1, q_2):=\mathbb{E}\, d\left( f\left(X, Y\right), f\left(q_1(X),q_2(Y)\right)\right) \to\min.
+\]
+In this paper we are mainly interested in the asymptotics of the \textit{quantization cost}
+\[
+C_f(n_1,n_2):= \inf \{ L_f(q_1, q_2)\colon \#q_1(\mX)\leq n_1,  \#q_2(\mY)\leq n_2 \}.
+\]
+%Sometimes to emphasise the dependence of the costs on $d$ and $\mu$ we write
+%$L_{f,d,\mu}(q_1, q_2)$ and $C_{f,d,\mu}(n_1, n_2)$ instead of $L_{f}(q_1, q_2)$ and $C_{f}(n_1, n_2)$
+%respectively.
+
+Throughout the paper we will assume, unless otherwise explicitly stated, the most common situation in applications, namely,  that $\mX=\R^{d_1}$, $\mY=\R^{d_2}$ be just the Euclidean spaces and 
+$\mu\ll \mathcal{L}^{d_1}\otimes \mathcal{L}^{d_2}$ with compact support. Even more, in most cases we will limit ourselves to the case
+$d_1=d_2=1$, i.e.\   $\mX = \mY =\R$, $\mu\ll \mathcal{L}^2$. We will see that already this case contains all the essential difficulties of the problem considered.
+%Main assumptions.
+%\begin{itemize}
+%	\item[(A)] $\mX$ and $\mY$ are compact subsets of $\R^{d_1}$ and $\R^{d_2}$ respectively.
+%	
+%	\item[(B)] $\mX = \mY =\R$, $\mu\ll \mathcal{L}^2$, $d$ Euclidean (or coming from any norm).
+%	\item[(C)] More general, $\mX=\R^{d_1}$, $\mY=\R^{d_2}$, $\mu\ll \mathcal{L}^{d_1}\otimes \mathcal{L}^{d_2}$. 
+%\end{itemize}
+
+{\color{red} Literature overview neded!}
+
+\subsection{Comparison with classical quantization}
+The functional product quantization problem introduced above has to be compared with the following (relatively) well studied classical quantization 
+problem, namely, that of finding the quantization map
+\[q\colon \mathcal{Z}\ :=\mX \times \mY\to \mathcal{Z}, \quad \#q(\mathcal{Z})\leq N,\]
+so that
+\[
+L(q):=\mathbb{E}\, d\left( Z, q(Z)\right) \to\min,
+\]
+where $d$ is the given distance on $\mathcal{Z}$.
+In other words, here,  as opposed to the functional product quatization problem, one would like to 
+quantize just the input vector minimizing the error on the input, i.e.\ the expectation of the norm of the difference between $Z$ and its quantized version, without taking in consideration the function $f$ to be calculated on the input.
+The cost of such classical quantization is given by
+\[
+C(N):= \inf \{ L_f(q)\colon \#q(\mathcal{Z})\leq N\}.
+\]
+%Sometimes to emphasise the dependence of the costs on $d$ and $\mu$ we write
+%$L_{d,\mu}(q)$, $C_{d,\mu}(N)$ instead of $L(q)$, $C(N)$
+%respectively. For $d(u, v):= |u-v|^q$ we write $L_{q,\mu}(q)$, $C_{q,\mu}(N)$ respectively.
+The case $\mX=\mY=[0,1]\subset \R$, so that $\mathcal{Z}= [0,1]^2$ and $\mu=\mathcal{L}^2\res [0,1]^2$ is the most well studied. In this case
+\[
+C_f(N) \sim C/\sqrt{N},
+\]
+with $C>0$ known.
+
+\section{Notation and preliminaries}
+
+Sometimes to emphasize the dependence of the costs on $d$ and $\mu$ we write
+$L_{f,d,\mu}(q_1, q_2)$ and $C_{f,d,\mu}(n_1, n_2)$ instead of $L_{f}(q_1, q_2)$ and $C_{f}(n_1, n_2)$
+respectively.
+Also for the classical quantization problem, to emphasize the dependence of the cost on $d$ and $\mu$ we may write
+$L_{d,\mu}(q)$ and $C_{d,\mu}(N)$ instead of $L(q)$ and $C(N)$
+respectively. For $d(u, v):= |u-v|^q$ we write $L_{q,\mu}(q)$, $C_{q,\mu}(N)$ respectively.
+
+
+%Unless otherwise stated, all the measures considered in the sequel are Borel probability measures.
+For a Borel measure $\mu$ on a metric space $E$ and $D\subset E$ Borel, we let $\mu\res D $ stand for the restriction of $\mu$ to $D$.
+If $\mu$ and $\nu$ are measures with $\mu$ absolutely continuous with respect to $\nu$, we write $\mu\ll\nu$.
+By $\mathcal{L}^d$ we denote the Lebesgue measure over the Euclidean space $\R^d$.
+
+The notation $L^p(E,\mu)$ stands for the usual Lebesgue space of functions over a metric space $E$ which are
+$p$-integrable with respect to $\mu$, if $1\leq p<+\infty$,  or 
+$\mu$-essentially bounded, if $p=+\infty$. The norm in this space is denoted by $\|\cdot\|_p$. 
+The reference to the metric space $E$ will be often omitted from the notation when
+not leading to a confusion, i.e.\ we will often write $L^p(\mu)$ instead of $L^p(E,\mu)$. Similarly, if $E=\R^d$ is a Euclidean space and 
+$\mu=\mathcal{L}^d$ is the Lebesgue measure, then we will omit the reference to $\mu$ writing just $L^p(\R^d)$ instead of $L^p(\R^d,\mu)$.     
+
+%We also need %to perform integration and duality arguments in
+%Lebesgue-Bochner spaces $L^p(\Omega,\mu; X)$ % (respectively, $L^p_{loc}(\Omega,\mu;X)$)
+%with $X$ a separable Banach space
+%of $\mu$-a.e.\ equivalence classes of $X$-valued maps on $E$ that are Bochner integrable on $\Omega$ % (resp.\ locally Bochner intergable)
+%with power $p\in [1,+\infty)$  or, for $p=+\infty$, $\mu$-essentially bounded. We omit the reference to $X$ when $X = \R$. We use the standard notation $\ell^p$ for the space of sequences summable with $p$-th power, if  $p\in [1,+\infty)$, or the space of bounded sequences, if $p=+\infty$.
+%If $E$ is a space of sequences, i.e.\ $E\subset\R^{\infty}$, then a function $\pi\colon E\to\R$ is called \emph{cylindrical},
+%if it depends only on finite number of coordinates. The set of such functions is  denoted $\mathrm{Cyl}(E)$.
+
+\section{A bridge between classical and functional product quantization}
+The quantization of only one of the variables is a bridge between classical case and the one we are studying. In this case the following estimate is considered
+\[
+L_f(q) = \E d(f(X, Y), f(q(X), Y))
+\]
+and
+\[
+C_f(N) = \inf \{L_f(q): \#q(X) \leq N\}.
+\]
+On one hand, if $d$ and $f$ are continuous and the support of the measure is compact, by taking a uniform quantization over the second coordinate we get
+\[
+C_f(N) \geq \lim_{n_2 \to \infty} C_f(N, n_2).
+\]
+Surprisingly, the reverse inequality is not true. Even the slightest quantization of the second coordinate may drastically decrease the total error, as the following example shows.
+
+\begin{example}
+Let $\mu:=\mathcal{L}^2\res [0, 1] \times [0, 1]$, $d(u,v):=|u-v|$ %. Divide the whole square into 9 equal squares. 
+and let
+\[
+f(x, y) := (1_{[1/3, 2/3]\times [0, 1/3]} + 1_{[0, 1/3]\times [1/3, 2/3]} + 1_{[2/3, 1]\times [2/3, 1]}) (x, y).
+\]
+Let $N := 1$. Then whatever $q$ is, one has that $f(q(x), y)$ differs from $f(x, y)$ on the union of $4$ squares of the total
+area $4/9$, so that $C_f(1)=4/9$. On the other hand, if $q([0,1])\in (0,1/3)$ and $q_2([0,1])\in (0,1/3)$, then $f(q(x), q_2(y))$ differs from $f(x, y)$ on the union of $3$ squares of the total
+area $3/9$, so that 
+\[
+4/9= C_f(1) > 3/9 \geq C_f(1,1)\geq C_f(1, n_2)
+\] 
+for all $n_2\in \N$.
+Note that this result does not change if we ask for $f$ to be smooth, since one can just approximate our indicator function with smooth functions. 
+\end{example}
+
+\section{Random quantization and existence of optimal quantizers}
+
+\subsection{Random quantization}
+In a random quantization setting we are looking for $n_i$ quantization points $\{x^1_i, \ldots, x^{n_i}_i\}$ and weight functions 
+$c_i^1, \ldots, c_i^{n_i}$ such that %for all $i, x$ satisfying 
+for all $x\in \R$ one has
+\[0\leq c_i^s (x) \leq 1 \quad\mbox{for all } s=1,\ldots, n_i, \qquad  \sum_{s=1}^{n_i} c_i^s(x) = 1, \] 
+
+The best random quantization by definition minimizes the error
+\[
+\mathcal{L}_f(c_i^s, x_i^s) := \sum_{s_1 = 1}^{n_1} \ldots \sum_{s_d = 1}^{n_d} \int_{\mX_1 \times\ldots \times \mX_d} c_1^{s_1}(x_1)\ldots c_d^{s_d}(x_d) d(f(\v x), f(x_1^{s_1}, \ldots, x_d^{s_d})) d\mu(\v x).
+\]
+In other words, we pick $n_i$ quantizing points in $\mX_i$ and we quantize every point $x_i$ in one of $x_i^1, \ldots, x_i^{n_i}$ with probabilities $c_i^1(x_i), \ldots, c_i^{n_i}(x_i)$ independently from everything else. 
+
+
+Nonrandom quantization problem that we are most interested in corresponds to the case of random quantization where all the weights except one are zero, i.e. $c_i^s(x_i) = \delta_{x_i^s, q_i(x_i)}$, where $\delta_{a, b}$ stands for Kronecker symbol.
+
+The following proposition shows that the best error for a random quantization problem is attained.
+
+\begin{proposition}
+	\label{prop:random_quant}
+	Assume that $f$ has a compact range, $d(u, v) \geq 0$ and the map $v\mapsto d(u,v)$ is lower semicontinuous for all $u$, while $\mu$ has  compact support. Then random quantization functional $\mathcal{L}_f(c_i^s, x_i^s) $ attains its minimum for some quantizers and weights.
+\end{proposition}	
+
+\begin{proof}
+	For any $ m \in \{1, \ldots, d\}$ and any measure $\nu(x_m, \ldots, x_d)$ denote its marginal distribution on $\mX_m$ as $\nu_{X_m}(x_m)$, so that it can be disintegrated as
+	\[
+	\nu(x_m, \ldots, x_d) = \nu_{x_m}(x_{m+1},\ldots, x_{d}) \otimes d\nu_{\mX_m}(x_m), 
+	\]
+	for $\nu_{\mX_m}$-a.e. $x_m \in \mX_m$, where $\nu_{x_m}$ is the conditional probability. 
+	
+	Denote $x_k^s = (x_{1, k}^{s_1}, \ldots, x_{d, k}^{s_d})$ for simplicity.
+	Consider $c_i^s(\cdot)$ in the positive part of a unit sphere in $L^{\infty} (\mu_{\mX_i})$ with *-weak topology, value $f(x_1^{s_1}, \ldots, x_d^{s_d})$ in the compact range of $f$. Then $\mathcal{L}_f(c_i^s, x_i^s)$, being a function of $c_i^s, s\in \{1, \ldots, n_i\}, i\in \{1, \ldots, n_i\}, f(x_1^{s_1}, \ldots, x_d^{s_d}), s_i \in \{1, \ldots, n_i\}\, \forall i\in\{1,\ldots, d\}$ is a function in product of all described spaces, and this product is compact. Therefore, in order to shot that the functional $L_f$ attains its minimum it is sufficient to prove that it is lower semicontinuous. Let us assume that as $k\to\infty$ one has $c_{i,k}^s\stackrel{\ast}{\rightharpoonup} c_i^s, f(x_{1, k}^{s_1}, \ldots, x_{d, k}^{s_d} ) \to a_{s_{1}, \ldots, s_{d}}$. We prove the following inequality by induction.
+
+For any $1 \leq m\leq d+1$, fixed $x_1, \ldots, x_{m-1}$ and measure $\nu(x_{m+1}, \ldots, x_d)$ one has
+\begin{eqnarray*}
+	\liminf_{k\to \infty} \left( \int_{\mX_{m}\times\ldots\times \mX_d} c_{{m}, k}^{s_{m}}(x_{m}) \ldots c_{d, k}^{s_d}(x_d) d(f(\v x), f(x_k^{\v s}) d\nu (x_{m}, \ldots, x_d) \right)
+	\\ \geq \int_{\mX_{m}\times\ldots\times \mX_d} c_{m}^{s_{m}}(x_{m}) \ldots c_{d}^{s_d}(x_d) d(f(\v x), a_{\v s}) d\nu (x_{m}, \ldots, x_d). 
+\end{eqnarray*}
+\textit{Induction base.} Clearly, for $m = d+1$ it is simply
+\[
+\liminf d(f(\v x), f(x_k^{\v s})) \geq d(f(\v x), a_{\v s}).
+\] 
+This inequality follows from the assumption for a function $v \to d(u, v)$ to be lower semicontinuous for any $u$.
+\\ \textit{Induction step}. We go from $m+1$ to $m$. First of all, disintegrate the integral into
+	\[
+	\int_{\mX_{m}} c_{m, k}^{s_m}(x_m) d\nu_{\mX_m}\left( \int_{\mX_{m+1}\times\ldots\times \mX_d} c_{m+1, k}^{s_{m+1}}(x_{m+1}) \ldots c_{d, k}^{s_d}(x_d) d(f(\v x), f(x_k^{\v s})) d\nu_{x_m}\right).
+	\]
+	From induction hypothesis one has
+	\begin{eqnarray*}
+	\liminf_{k\to \infty} \int_{\mX_{m+1}\times\ldots\times \mX_d} c_{m+1, k}^{s_{m+1}}(x_{m+1}) \ldots c_{d, k}^{s_d}(x_d) d(f(\v x), f(x_k^{\v s})) d\nu_{x_m}
+	\\ \geq  \int_{\mX_{m+1}\times\ldots\times \mX_d} c_{m+1}^{s_{m+1}}(x_{m+1}) \ldots c_{d}^{s_d}(x_d) d(f(\v x), a_{\v s})) d\nu_{x_m}
+	\end{eqnarray*}
+	Now, to estimate the whole term let us use Fatou's Lemma with varying measures. It is applicable if the measure $c_{m, k}^{s_m} d\nu_{X_m}(x_m)$ converges setwise to $c_{m}^{s_m}(x_m) d\nu_{X_m}(x_{m})$. This convergence immediately follows from *-weak convergence of $c_{m, k}^{s_m} (x)\to c_m^{s_m}(x)$. Therefore, one has
+	\begin{eqnarray*}
+		\liminf_{k\to \infty} \int_{\mX_{m}} c_{m, k}^{s_m}(x_m) d\nu_{\mX_m}\left( \int_{\mX_{m+1}\times\ldots\times \mX_d} c_{m+1, k}^{s_{m+1}}(x_{m+1}) \ldots c_{d, k}^{s_d}(x_d) d(f(\v x), f(x_k^{\v s})) d\nu_{x_m}\right)
+		\\ \geq \int_{\mX_{m}} c_{m, k}^{s_m}(x_m) d\nu_{\mX_m} \liminf_{k\to\infty} \left( \int_{\mX_{m+1}\times\ldots\times \mX_d} c_{m+1, k}^{s_{m+1}}(x_{m+1}) \ldots c_{d, k}^{s_d}(x_d) d(f(\v x), f(x_k^{\v s})) d\nu_{x_m}\right)
+		\\ \geq \int_{\mX_{m}} c_{m}^{s_m}(x_m) d\nu_{\mX_m} \left( \int_{\mX_{m+1}\times\ldots\times \mX_d} c_{m+1}^{s_{m+1}}(x_{m+1}) \ldots c_{d}^{s_d}(x_d) d(f(\v x), a^{\v s}) d\nu_{x_m}\right)
+		\\ = \int_{\mX_m \times \ldots \times \mX_{d}} c_m^{s_m}(x_m) \ldots c_d^{s_d}(x_d) d(f(\v x)), a^{\v s}) d\nu(x_m, \ldots, x_d)
+	\end{eqnarray*}
+
+In result, we have shown that one term of the sum defining $\mathcal{L}_f(c_i^s, x_i^s)$ is lower semicontinous in considered space. It remains to use a standard observation that $\liminf \sum \int ... \geq \sum \liminf \int ...$ and get lower semicontinuity of the whole sum.
+	\end{proof}
+	
+	
+	\subsection{Existence of nonrandom optimal quantizers}
+	Now we are going to show that this minimum can be obtained by nonrandom quantizers, and therefore the best error in nonrandom quantization is also achievable.
+	
+	\begin{theorem}
+		\label{thm:exist}
+		Assume that $f$ has a compact range and $d(u, v) \geq 0$ is lower semicontinuous in second coordinate, measure $\mu(x, y)$ has a compact support. Then the best quantization error $\mathcal{C}_f(\v n)$ is achievable as $\mathcal{L}_f(\v q)$ for some quantizers $q_1, \ldots, q_d$. Moreover, the best nonrandom quantization error and the best random quantization error are equal.
+	\end{theorem}	
+	
+	\begin{proof}
+	Since nonrandom quantization is a particular case of random quantization, it is sufficient to prove that the optimum for a random quantization problem from \ref{prop:random_quant} is achievable by nonrandom quantizers.
+	Consider the optimum for a random quantization problem $c_i^{s_i}(x_i), x_i^{s_i}, s_i \in \{1, \ldots, n_i\}, i\in\{1, \ldots, d\}$. Denote $x^{\v s} = (x_1^{s_1}, \ldots, x_d^{s_d})$ for convenience. Disintegration measure denote as
+	\[
+	\mu(x_1, \ldots, x_d) = \mu_{x_i}(x_1, \ldots, x_{i-1}, x_{i+1}, \ldots, x_d) \otimes d \mu_{X_i}(x_i).
+	\]
+	Essentially, we use linearity of $\mathcal{L}_f(c_i^s, x_i^s)$ in every weight function $c_i^s$. It allows us to improve the total error by transforming one random quantizer into a non-random one. Now, out of all optimal quantizers $c_i^s, x_i^s$ pick one with the least number of random quantizers (we name a quantizer $c_i^s, s\in\{1, \ldots, n_i\}$  non-random, if one of the weights is one and the others are zero). Without loss of generality assume that $c_1^s$ is not random. Define
+	 \[
+	s_{1, b}(x_1) = \underset{s_1 \in \{1, \ldots, n_1\}}{\arg\min} \int_{\mX_2\times\ldots\times \mX_d} \sum_{s_2 = 1}^{n_d} \ldots \sum_{s_d = 1}^{n_d} c_2^{s_2}(x_2) \ldots c_d^{s_d}(x_d) 
+	d(f(\v x), f(x^{\v s}))d\mu_{x_1}.
+	\]	
+	Clearly,
+	\begin{eqnarray*}
+	\int_{\mX_1 \times \ldots \mX_d} \sum_{s_1, \ldots, s_d} c_1^{s_1}(x_1)\ldots c_d^{s_d}(x_d) d(f(\v x), f(x^{\v s})) d\mu(\v x) 
+	\\= \int_{\mX_1} \sum_{s_1=1}^{n_1} c_1^{s_1}(x_1) d\mu_{\mX_1}(x_1)\left( \int_{\mX_2\times\ldots\times \mX_d} \sum_{s_2, \ldots, s_d} c_2^{s_2}(x_2)\ldots c_d^{s_d}(x_d) d(f(\v x), f(x^{\v s})) d\mu_{x_1}\right)
+	\\ \geq 
+	\int_{\mX_1} d\mu_{\mX_1}(x_1)\left( \int_{\mX_2\times\ldots\times \mX_d} \sum_{s_2, \ldots, s_d} c_2^{s_2}(x_2)\ldots c_d^{s_d}(x_d) d(f(\v x), f(x_1^{s_{1, b}(x_1)}, x_2^{s_2}, \ldots, x_d^{s_d})) d\mu_{x_1}\right)
+	\\ = \int_{\mX_1 \times\ldots\times \mX_d} \sum_{s_2, \ldots, s_d} c_2^{s_2}(x_2)\ldots c_d^{s_d}(x_d) d(f(\v x), f(x_1^{s_{1, b}(x_1)}, x_2^{s_2}, \ldots, x_d^{s_d})) d\mu
+	\end{eqnarray*}
+	In other words, we transformed random quantizer $c_1^{s}(x_1)$ into non-random one $q_1(x_1) = x_1^{s_{1, b}(x_1)}$ and the error improved. But the error was optimal already, and the number of random quantizers was minimal by our choice. Therefore, all the quantizers were non-random. 
+	\end{proof}
+
+	\subsection{Properties of quantizing sets}
+
+\begin{lemma}
+	\label{lem:quant_zero_measure}
+	Assume that $f$ has a compact range, $d(u, v)\geq 0$ is lower semicontinuous in v, $d(u, v) = 0$ iff $u = v$. In addition, $\mu(\v x)$ has a compact support and $\mu(f^{-1} (c))=0$ for all $c \in \R$. If $q_i(\mX_i) = \{a_i^{s}\}_{s=1}^{n_i}$, set $A_i^s = q_i^{-1}(a_i^s).$
+	Assuming that $L_f(\v q) \to 0$ as $n_1, \ldots, n_d \to \infty$, one has 
+	\[
+	\max_{s_1, \ldots, s_d} \mu (A_1^{s_1}\times \ldots \times A_d^{s_d}) \to 0, \qquad \mbox{as } n_1, \ldots, n_d \to\infty.
+	\]
+\end{lemma}
+\begin{proof}
+	If not, there is an $\varepsilon>0$ and some $	(A_1^{s_1}\times \ldots \times A_d^{s_d})(\v n)$ with 
+	\[
+\mu((A_1^{s_1} \times\ldots \times A_d^{s_d})(\v n)) \geq \varepsilon \quad \mbox{with $(s_1, \ldots, s_d) = (s_1, \ldots, s_d) (\v n)$}.
+	\]
+	Note that
+	\[
+	L_f(\v q) \geq \int_{A_1^{s_1} \times\ldots \times A_d^{s_d}} d(f(\v x), f( a_1^{s_1},\ldots, a_d^{s_d}))\, d\mu(\v x).
+	\]
+	Up to a subsequence (not relabeled) one has $\mathbf{1}_{A_1^{s_1}\times\ldots\times A_d^{s_d} (\v n)} \to \varphi$ in the $^*$weak sense of $L^\infty(\mu)$ and  $f(a_1^{s_1},\ldots,  a_d^{s_d}) \to c$ as $n_1, \ldots, n_d \to \infty$. Moreover, $\int \varphi \, d\mu \geq \eps$ and $\varphi \geq 0$ $\mu$-a.e.. Therefore, due to Ioffe's theorem \cite{Ioffe}, one has 
+	\begin{align*}
+	& \int_{\mX_1 \times \ldots \times \mX_d} \varphi(\v x) d(f(\v x), c)\, d\mu(\v x) \\
+	&\leq \liminf_{n_1, \ldots, n_d \to \infty} \int_{\mX_1\times \ldots \times \mX_d}\mathbf{1}_{A_1^{s_1}\times \ldots \times A_d^{s_d}}(\v x) d( f(\v x), f( a_1^{s_1}, \ldots, a_d^{s_d}))\, d\mu(\v x)
+	\\ &\leq \liminf_{n_1, \ldots, n_d \to \infty} L_f(\v q) = 0.
+	\end{align*}
+	Since $d(u, v)$ is nonnegative, it is true that
+	\[
+	\int_{\mX_1 \times \ldots \times \mX_d} \varphi(\v x) d(f(\v x), c)\, d\mu(\v x)=0,
+	\]
+	which implies
+	$f(\v x)=c$ for a set of positive measure $\mu$ of $\v x$ (area where $\varphi > 0$), contrary to the assumptions.
+\end{proof}
+
+
+
+\section{Optimal quantizers for particular classes of functions}
+
+\subsection{Characteristic functions of measurable rectangles and their finite sums}
+
+We first consider the case when $f$ is a characteristic function of a measurable rectangle, i.e.\ $f=\mathbf{1}_{A_1 \times \ldots \times A_d}$  for
+$A_i \subset\mX_i$ measurable sets.  
+
+\begin{proposition}
+	If $f(\v x)= \mathbf{1}_{A_1\times \ldots \times A_d}$, with measurable $A_i \subset\mX_i$ then for $\forall i \, n_i\geq 2$ one has $C_f(\v n)=0$.
+\end{proposition}
+
+\begin{proof}
+	Take $a_{i}^{1}\in A_i, a_i^2 \in \mX_i \setminus A_i$ and set
+		\begin{eqnarray*}
+		q_i(x_i) &:=&
+		\left\{
+		\begin{array}{rl}
+			a_{i}^1, & x_i\in A_i,\\
+			a_{i}^2, & x_i\in \mX \setminus A_i,
+		\end{array} 
+		\right. 
+	\end{eqnarray*}
+	
+\end{proof}	
+
+%\subsection{Finite sums of characteristic functions of measurable rectangles}
+
+We are now able to consider the case when $f$ is a finite sum of characteristic functions of measurable rectangles.
+
+\begin{proposition}
+	If 
+	\[f(\v x)=\sum_{j=1}^N c_j \mathbf{1}_{A_1^j}(x_1)\ldots \mathbf{1}_{A_d^j}(x_d),\]
+	where $A_i^j \subset \mX_i$ whatever is $\mX_i$, then 
+	there is an $\bar N$ such that for $n_i \geq \bar N$, one has $C_f(\v n) = 0$.
+\end{proposition}
+
+\begin{proof} Let us encode each point with the sets containing it. Denote 
+\[ 
+e_i(x_i) = \left( \mathbf{1}_{ A_i^j }(x_i)\right)_{j=1}^N.
+\] 
+By definition the images of $e_i$ are binary codes of size $N$. For every binary code $w$ in the image $e_i(\mX)$ pick $x_i^w$ such that $e_i(x_i^w) = w$. Consider the following quantization: $q_i(x_i) = x_i^{e_i(x)}$. Then for all $\v x \in \mX_1\times\ldots\times \mX_d$ $e_i(x_i) = e_i(q_i(x_i))$. Therefore from definition of $e_i$ one has
+	\[
+	f(\v x) = f(q_1(x_1),\ldots, q_d(x_d)).
+	\]
+	Consequently, $L_f(\v q) = 0$ for any distance function $d$.
+\end{proof}
+
+
+\begin{itemize}
+	\item Note that the measurable rectangles $A_1^j\times \ldots \times A_d^j$ may be intersecting.
+	\item In general, one has $\bar N= O(2^N)$ as $N\to \infty$ because it is a total number of binary strings of length $N$. Nevertheless, when $\mathcal{X}_i=\R$ and all $A_i^j$ are intervals
+	one has $\bar N \leq 2N$.
+	\item The statement is constructive, i.e.\ it provides an algorithm for quantization.	
+\end{itemize}
+
+\begin{proof}
+	The statement follows from the notion that $N$ intervals in $\R$ divide it into at most $2N$ parts. Moreover, all of them, except the union of two rays, are intervals. The encodings $e_i(\mX_i)$ are constant on these intervals, therefore their images consist of at most $2N$ elements. 
+	
+	In order to algorithmically construct $q_i(\cdot)$ order all the edges of $A_i^j, j\in \{1, \ldots, N\}$ and consider the intervals between adjacent ones after ordering -- parts of the division. Take any part of the division and define $q_i$ there as a middle point of this part. The coding $e_i(x_i)$ is constant inside each part, i.e. $e_i(x_i) = e_i(q_i(x_i))$. Consequently, $f(\v x) = f(q_1(x_1),\ldots, q_d(x_d))$ and the error is zero.
+
+\end{proof}	
+
+\begin{proposition}\label{prop_zerocost1}
+	If 
+	$C_f(\v n)=0$ and this error is achievable, then there are disjoint measurable sets $A_i^{s_i}\subset \mX$, $1 \leq s_i \leq n_i$, $1\leq i \leq d$ such that
+	the union 
+	$\cup_{s_1, \ldots, s_d} A_1^{s_1} \times \ldots \times A_d^{s_d}$ covers $\mX_1 \times \ldots \times \mX_d$ up to a $\mu$-negligible set and 
+\begin{equation}\label{eq_fstep1a}
+	f(\v x)=\sum_{s_1=1}^{n_1}\ldots \sum_{s_d = 1}^{n_d} c_{s_1, \ldots, s_d} \mathbf{1}_{A_1^{s_1}}(x_1)\ldots \mathbf{1}_{A_d^{s_d}}(x_d)
+\end{equation}	for some $c_{s_1, \ldots, s_d}\in \R$, whatever are $\mX_i$. 
+\end{proposition}
+
+\begin{proof} By definition there are $q_1, \ldots, q_d$ such that $\mathcal{L}_{f}(\v q) = 0$.
+	If $q_i(\mX_i) = \{a_i^{s}\}_{s=1}^{n_i}$, set $A_i^s = q_i^{-1}(a_i^s).$
+	One has then
+	\begin{align*}
+	0 = \mathcal{L}_f(\v q) &= \int_{\mX_1 \times\ldots\times \mX_d} d(f(\v x),f(q_1(x_1),\ldots, q_d(x_d)))\,d\mu(\v x)\\
+	&=  \sum_{s_1=1}^{n_1}\ldots\sum_{s_d=1}^{n_d} \int_{A_1^{s_1} \times\ldots \times A_d^{s_d}} d(f(\v x),f(a_1^{s_1},\ldots, a_d^{s_d}))\,d\mu(\v x)
+	\end{align*}
+	which means that $f(\v x) = f(a_1^{s_1}, \ldots, a_d^{s_d})$ for $\mu$ - a.e. $\v x \in A_1^{s_1}\times\ldots\times A_{d}^{s_d}$. Denote $c_{s_1, \ldots, s_d} = f(a_1^{s_1}, \ldots, a_d^{s_d})$ and get that ~\eqref{eq_fstep1a} is true.
+	\end{proof}	
+
+\begin{remark}
+	Here $d$ may be any positive measurable function (not necessarily distance) such that $d(u,v) = 0$ implies $u=v$.
+\end{remark}
+	
+\begin{remark}
+	Due to Theorem \ref{thm:exist} the best error is achievable for $f$ with a compact range and $d$ lower semicontinuous in the second coordinate. Thus, under these conditions, the above Proposition~\ref{prop_zerocost1} gives us the representation of functions with zero quantization cost.
+\end{remark}	
+
+%\subsection{Characteristic functions of convex sets in $\R \times \R$}
+%
+%\begin{theorem}
+%	Let $K$ be a convex body in $\R \times \R$ with a piecewise smooth boundary that is not a rectangle. Then, for an indicator function $f(x, y) = 1_{K}(x, y)$, standard Lebesgue measure $\mu = \lambda^2$ and any distance function one has
+%	\[
+%	\mathcal{C}_f(n_1, n_2) \asymp \frac{1}{\min(n_1, n_2)}, \mbox{as } n_1, n_2 \to \infty.
+%	\] 
+%\end{theorem}
+%\begin{remark}
+%	The constants in this relation depend on $K$ and clearly are proportional to a $d(1, 0)$. The best order of the error $\min(n_1, n_2)^{-1}$ is achieved for a uniform quantization.
+%\end{remark}
+%
+%\begin{remark}
+%	For a fixed total number of points $N = n_1 + n_2$ it is clear that
+%	\[
+%	C_f(N) \asymp \frac{1}{N}, \mbox{as } N\to\infty.
+%	\]
+%\end{remark}
+%
+%\begin{proof}
+%	One can easily show that for a uniform quantization the upper bound holds. Take some rectangle covering $K$. Divide its sides into $n_1-1$ and $n_2-1$ equal intervals, then put a point into each interval and one point outside each rectangle side. This way we have a lattice with $(n_1 - 1)(n_2 - 1)$ small rectangles of size $c_1 n_1^{-1} \times c_2 n_2^{-1}$ with different quantizing points each. It is clear that only rectangles that intersect $\delta K$ can give some error, and one such a rectangle contributes at most $d(1, 0) c_1 c_2 n_1^{-1} n_2^{-1}$. Since for a convex $K$ there are at most $4 \max(n_1, n_2)$ small rectangles intersecting $\delta K$, we get the total error at most $4 d(1, 0) c_1 c_2 \min(n_1, n_2)^{-1}$.
+%	
+%	To prove the lower bound we reformulate the statement in the following way. Without loss of generality we assume that $n_1 \leq n_2$. Consider the level sets of $q_1$ and $q_2$, $A_j, 1\leq j \leq n_1$ and $\tilde B_k, 1\leq k \leq n_2$ respectively. For each $1\leq j \leq n_1$ we take $K_j = \{k \in \{1, \ldots, n_2\} | f(q_1(A_j), q_2(\tilde B_k)) = 1 \}$ and construct 
+%	\[
+%	B_j = \cup_{k \in K_j} \tilde B_k.
+%	\]
+%	In other words, $f(q_1(x), q_2(y)) = 1$ iff $(x, y) \in \cup_{j=1}^{n_1} A_j\times B_j$. Denote $n = n_1$ for simplicity. Our next step is to show that as $n \to \infty$ one has
+%	\[
+%	|K \triangle \bigcup_{j=1}^n A_j\times B_j| \succ n^{-1}.
+%	\]
+%	Note that this is exactly the lower bound we want, since the symmetric difference  $|K \triangle \bigcup_{j=1}^n A_j\times B_j|$ is the set where $f(x, y) \neq f(q_1(x), q_2(y))$, thus it contributes its measure multiplied by $d(1, 0)$ to the total error.
+%	All the asymptotic relations are being written under the condition $n\to\infty$.
+%	Consider a piecewise smooth part of the boundary of $K$, where the tangent lines are supporting lines. Without loss of the generality we think that all the outward normal vectors to this part have positive coordinates. 
+%	For some constant $C$ that we specify in the end, consider $k\sim Cn$ right triangles close to the boundary such that
+%	\begin{itemize}
+%		\item All the legs of these triangles are parallel to the axes and their hypothenuses touch the boundary.
+%		\item All the heights on the hypothenuse are equal and are $\succ n^{-1}$.
+%		\item Triangles are lying in the cells of some lattice.
+%		\item Vertices with a right angle are inside K.
+%	\end{itemize}	
+%	For instance, to pick such a family of triangles take some constant $c = c(k)$ and a lattice with a step $c n^{-1}$. As $n\to\infty$ the part of the boundary intersects $> c_1 c^{-1} n$ lattice cells. Divide all the cells into 9 parts, depending on the residual modulo 3 of both coordinates. In one of the sets the boundary intersects $> c_1 (9c)^{-1} n$ cells -- we mark them. Notice that one can pick such a small $c$ that we have chosen at least $k$ cells.
+%	\\In every chosen cell pick a point where the boundary is differentiable. Draw a tangent line in this point and a normal vector inside K. Measure some distance $\tilde c n^{-1}$ along this vector and mark a triangle vertex with a right angle. Then we draw legs parallel to the axes and intersect them with a tangent. Clearly the first two conditions are satisfied due to the definition. Besides that, since the coordinates of a normal vector are separated from $0$, we can pick $\delta c$ such that the distance from the chosen point $\delta K$ to the triangle vertices is not greater than $c n^{-1}$. Then the whole triangle is lying inside the cell of the lattice with a step $3cn^{-1}$. Finally, the fourth condition is satisfied for a large enough $n$ since all the vertices are close to the boundary -- the distance is $\tilde c n^{-1}\to 0$.
+%	\\For convenience we enumerate all the triangles such that their $y$-coordinate is increasing and $x$-coordinate is decreasing. Let $X_i, Y_i$ be a projections of the legs of the $i$-th triangle on the axes. Since the coordinates of the normal vectors are separated from 0, for some constant $\rho$ depending only on $K$, all the lengths of $X_i$ differ by at most $\rho$ times and all the length of $Y_i$ differ by at most $\rho$ times. 
+%	\\Now we can clarify the choice of $k$ -- let us pick $k > 12\rho^4 n$. Let $S_1$ be the area of the first triangle. Clearly $S_1 \asymp n^{-2}$.
+%	\\For the sets $A_j$ and $B_j$ we denote $a_i^j = |A_j\cap X_i|/|X_i|$ and $b_i^j = |B_j\cap Y_i|/|Y_i|$. Of course $a_i^j, b_i^j \in [0, 1]$.
+%	\\On one hand, the contribution of one set $A_j\times B_j$ to the covering of the triangles is not greater than
+%	\[
+%	\sum_{i=1}^k a_i^j b_i^j |X_i||Y_i| \leq 2\rho^2 S_1 \sum_{i=1}^k a_i^j b_i^j.
+%	\]
+%	On the other hand, $A_j\times B_j$ covers the part outside $K$ with an area at least
+%	\[
+%	\sum_{i=1}^{k-1} a_i^j |X_i|(b_{i+1}^j |Y_{i+1} + \ldots + b_k^j|Y_k|) \geq \frac{2}{\rho^2} S_1 \sum_{i=1}^{k-1}a_i^j (b_{i+1}^j +\ldots + b_k^j).
+%	\]
+%	Now we need the following statement.
+%	\begin{lemma}
+%		For any $k\geq 1$, $a_i^j, b_i^j \in [0, 1]$ one has
+%		\[
+%		\sum_{i=1}^{k-1} a_i^j (b_{i+1}^j + \ldots b_k^j) \geq \frac{1}{2} \sum_{i=1}^k a_i^j b_i^j - \frac{1}{2}.
+%		\]
+%	\end{lemma}	
+%	\begin{proof}
+%		This inequality is linear in all the variables, therefore it is enough to check for $a_i^j, b_i^j \in \{0, 1\}$.
+%		If $a_i^j = 0$, then there is no $b_i^j$ in the right hand side but there is one with a nonnegative coefficient in the left hand side, therefore one can say that $b_i^j = 0$.
+%		Similarly, if $b_i^j = 0$ one can say that $a_i^j = 0$. Therefore, we can omit all the pairs of zeros and check the same inequality where all the variables equal to one. It remains to note that for any $k'$ it is true that
+%		\[
+%		\sum_{i=1}^{k'-1} (k'-i) = \frac{k'^2 - k'}{2}\geq \frac{1}{2}k' -\frac{1}{2}.
+%		\]
+%	\end{proof}
+%	We proceed with the original statement. The whole area of all the triangles is not less than $k \rho^{-2}S_1$. If all the sets $A_j\times B_j$ cover at most $\frac{1}{2}k\rho^{-2}S_1$ of this area, we have a big uncovered area inside the union of these triangles, since
+%	\[
+%	\frac{1}{2}k\rho^{-2}S_1 \succ n^{-1}.
+%	\]
+%	Since the distance from the tangent line to the boundary decreases quadratically fast, we can say that the union of the triangles is almost inside $K$ and the error is of order
+%	\[
+%	kO(n^{-3}) = o(n^{-1}).
+%	\] 
+%	Therefore this case is impossible and $A_j\times B_j$ have to cover more than $\frac{1}{2}k \rho^{-2}S_1$ inside all the triangles.
+%	Thus
+%	\[
+%	2\rho^2 S_1 \sum_{j=1}^n \sum_{i=1}^k a_i^j b_i^j > \frac{k}{2}\rho^{-2}S_1,
+%	\]
+%	i.e.
+%	\[
+%	\sum_{j=1}^n\sum_{i=1}^k a_i^j b_i^j > \frac{k}{4}\rho^{-4}.
+%	\]
+%	Due to the lemma and the definition of $k$($k>12\rho^4 n$), one has
+%	\[
+%	\sum_{j=1}^n \sum_{i=1}^{k-1} a_i^j (b_{i+1}^j+\ldots +b_k^j) \geq \frac{1}{2} \sum_{j=1}^n\sum_{i=1}^{k}  a_i^j b_i^j - \frac{n}{2} > \frac{k}{8}\rho^{-4}-\frac{n}{2}>n.
+%	\]
+%	Therefore, in this case the covered area outside $K$ is bounded from below as
+%	\[
+%	\frac{2}{\rho^2}S_1 n \succ n^{-1}.
+%	\]
+%	Consequently, we either cover a big area outside $K$ or we do not cover enough inside $K$.
+%\end{proof}	
+
+
+\subsection{Characteristic functions of ``nice'' sets in $\R \times \R$}
+
+
+\begin{theorem}
+	 Consider a characteristic function $f(x, y) = 1_{K}(x, y)$, standard Lebesgue measure $\mu =  \mathcal{L}^2\res [0,1]^2$ and distance $d(1, 0) = d(0, 1) = 1$. Then
+	 \begin{itemize}[leftmargin=*]
+	 \item For a convex body $K$ with a piecewise smooth boundary that is not a rectangle one has
+	 \[
+	 \mathcal{C}_f(n_1, n_2) \geq \frac{c(1 + o(1))}{\min(n_1, n_2)}, \mbox{as } n_1, n_2 \to \infty.
+	 \]
+	 \item For any body $K$ with a piecewise smooth boundary one has
+	 \[
+	 \mathcal{C}_f(n_1, n_2) \leq \frac{P(K) (1 + o(1))}{\min(n_1, n_2)}, \mbox{as } n_1, n_2 \to \infty.
+	 \]
+	 \end{itemize}
+\end{theorem}
+\begin{remark}
+	The constant $c$ in this relation depends on $K$. Clearly, the distance function is not important, because $f$ has only 2 values. The upper bound error is achieved for a uniform quantization.
+\end{remark}
+
+\begin{remark}
+	For a fixed total number of points $N = n_1 + n_2$ it is clear that
+	\[
+	\frac{c_1}{N} \leq  C_f(N)\leq   \frac{c_2}{N}, \quad \mbox{as } N\to\infty
+	\]
+	for some positive constants $c_1$ and $C_2$. 
+\end{remark}
+
+\begin{proof}
+	One can easily show that for a uniform quantization the upper bound holds. Divide $\mathcal{X} = [0, 1]$ and $\mathcal{Y} = [0, 1]$ into $n_1$ and $n_2$ equal intervals, then put a quantizing point into each interval. This way we have a lattice with $n_1 n_2$ small rectangles of size $n_1^{-1} n_2^{-1}$ with different quantizing points each. It is clear that only rectangles that intersect boundary of $K$ add value to the error. Since for a convex $K$ there are at most $4 \max(n_1, n_2)$ small rectangles intersecting the boundary of $K$, we get the upper bound of $4 \min(n_1, n_2)^{-1}$.
+	
+	To prove the lower bound we reformulate the statement in the following way. Without loss of generality we assume that $n_1 \leq n_2$. Consider the level sets of $q_1$ and $q_2$, $A_j, 1\leq j \leq n_1$ and $\tilde B_k, 1\leq k \leq n_2$ respectively. For each $1\leq j \leq n_1$ we take $K_j = \{k \in \{1, \ldots, n_2\} | f(q_1(A_j), q_2(\tilde B_k)) = 1 \}$ and construct 
+	\[
+	B_j := \cup_{k \in K_j} \tilde B_k.
+	\]
+	In other words, $f(q_1(x), q_2(y)) = 1$ if and only if $(x, y) \in \cup_{j=1}^{n_1} A_j\times B_j$. Denote $n = n_1$ for simplicity. Our next step is to show that as $n \to \infty$ one has
+	\[
+	|K \triangle \bigcup_{j=1}^n A_j\times B_j| \succ n^{-1}.
+	\]
+	Note that this is exactly the lower bound we want, since the symmetric difference  $|K \triangle \bigcup_{j=1}^n (A_j\times B_j)|$ is the set where $f(x, y) \neq f(q_1(x), q_2(y))$, thus it contributes its measure to the total error.
+	
+	Consider a piecewise smooth part of the boundary of $K$ where all the outward normal vectors have strictly positive coordinates. Denote lengths of its $x$ and $y$ projections as $P_x$ and $P_y$. For some constant $C$ that we specify later, consider a polygonal chain of $k = Cn$ segments that are tangent to the chosen part of $\delta K$ in its points of differentiability and have $x$-projections of the same length. Construct $k$ right triangles with their main vertices inside $K$ by using segments of this chain as hypothenuses. Enumerate all the triangles such that their $y$-coordinate is increasing and $x$-coordinate is decreasing. Let $X_i, Y_i$ be projections of legs of the $i$-th triangle on $x$ and $y$ axes. Since the coordinates of the normal vectors are separated from 0, one can define $\rho_1, \rho_2$ depending only on $K$ such that
+	\[
+	\rho_1^{-1} \max_i |Y_i| \leq \frac{P_y}{k}\leq \rho_2\min_i |Y_i|
+	\]
+	Note that since all the $|X_i|$ are equal, we compare the maximum/minimum and average of the fraction of coordinates of normal vectors. Now we can clarify the choice of $C$ -- pick $C = 4\rho_1$. In the next section we prove that $A_j \times B_j$ either do not cover area of at least $(16 \rho_1 (2\rho_1\rho_2+1) n)^{-1} P_x P_y $ inside triangles, or cover at least $(16 \rho_1 (2\rho_1\rho_2+1)  n)^{-1} P_x P_y$ outside of K. Then, to obtain similar estimate for $K$ it remains to notice that a negligible part of triangles lies outside of K, since they use tangents as hypothenuses. 
+	
+	For the sets $A_j$ and $B_j$ we denote $a_i^j = |A_j\cap X_i|/|X_i|$ and $b_i^j = |B_j\cap Y_i|/|Y_i|$. Of course $a_i^j, b_i^j \in [0, 1]$.
+	\\On one hand, the contribution of one set $A_j\times B_j$ to the covering of the triangles is not greater than
+	\[
+	\sum_{i=1}^k a_i^j b_i^j |X_i||Y_i| \leq k^{-2}\rho_1 P_x P_y \sum_{i=1}^k a_i^j b_i^j.
+	\]
+	On the other hand, $A_j\times B_j$ covers the part outside $K$ with an area at least
+	\[
+	\sum_{i=1}^{k-1} a_i^j |X_i|(b_{i+1}^j |Y_{i+1}| + \ldots + b_k^j|Y_k|) \geq k^{-2}\rho_2^{-1} P_x P_y \sum_{i=1}^{k-1}a_i^j (b_{i+1}^j +\ldots + b_k^j).
+	\]
+	Now we need the following lemma.
+	\begin{lemma}
+		For any $k\geq 1$, $a_i^j, b_i^j \in [0, 1]$ one has
+		\[
+		\sum_{i=1}^{k-1} a_i^j (b_{i+1}^j + \ldots b_k^j) \geq \frac{1}{2} \sum_{i=1}^k a_i^j b_i^j - \frac{1}{2}.
+		\]
+	\end{lemma}	
+	\begin{proof}
+		This inequality is linear in all the variables, therefore it is enough to check for $a_i^j, b_i^j \in \{0, 1\}$.
+		If $a_i^j = 0$, then there is no $b_i^j$ in the right hand side but there is one with a nonnegative coefficient in the left hand side, therefore one can say that $b_i^j = 0$.
+		Similarly, if $b_i^j = 0$ one can say that $a_i^j = 0$. Therefore, we can omit all the pairs of zeros and check the same inequality where all the variables equal to one. It remains to note that for any $k'$ it is true that
+		\[
+		\sum_{i=1}^{k'-1} (k'-i) = \frac{k'^2 - k'}{2}\geq \frac{1}{2}k' -\frac{1}{2}.
+		\]
+	\end{proof}
+	We proceed with the original statement. The whole area of all the triangles is $\sum_i |X_i| |Y_i|/2 = P_x P_y / (2k)$ since all the $|X_i|$ are equal. Thus, for 
+	\[
+	\lambda = \frac{4\rho_1\rho_2 + 1}{ 4\rho_1\rho_2+2}
+	\]
+	at least $\lambda P_x P_y / (2k)$ of it is covered, otherwise the uncovered part would be at least 
+	\[
+	(1 - \lambda) P_x P_y / (2k) = \frac{P_x P_y}{(8\rho_1\rho_2 + 4) k} = \frac{P_x P_y}{16\rho_1 (2\rho_1\rho_2+1)n}.
+	\]
+	Therefore,
+	\[
+	k^{-2}\rho_1 P_x P_y \sum_{j=1}^n \sum_{i=1}^{k} a_i^j b_i^j \geq \lambda P_x P_y / (2k)
+	\]
+	Then, lemma implies
+	\[
+	\frac{P_x P_y}{k^2 \rho_2}\sum_{j=1}^n \sum_{i=1}^{k-1} a_i^j (b_{i+1}^j + \ldots + b_k^j) 
+	\geq \frac{P_x P_y}{2k^2\rho_2} \sum_{j=1}^n \sum_{i=1}^k a_i^j b_i^j - \frac{n P_x P_y}{2k^2\rho_2 }\geq \frac{\lambda P_x P_y}{4\rho_1\rho_2 k} - \frac{n P_x P_y}{2k^2\rho_2 }.
+	\]
+	Due to definitions of $\lambda$ and $k$ one has
+	\[
+	\frac{\lambda P_x P_y}{4\rho_1\rho_2 k} - \frac{n P_x P_y}{2k^2\rho_2 } = \frac{P_x P_y}{16\rho_1 (2\rho_1 \rho_2 + 1)n} .
+	\]
+\end{proof}	
+
+\begin{corollary}
+	For a characteristic function of a right-angled triangle with sides $P_x, P_y$ the quantizing error is bounded from below
+	\[
+	C_f(n_1, n_2) \geq \frac{P_x P_y}{48 \min(n_1, n_2)}.
+	\]
+\end{corollary}
+	
+
+%	\section{Precise calculations}
+	\subsection{Linear functions over $\R\times \R \times \ldots \times \R$}
+	
+	For the case when $f$ is a linear function we are able to calculate exactly the quantization cost for a fairly large class of distance functions $d$.
+	
+\begin{theorem}
+	\label{th_quantLinear1}
+	Let $f(x) := \sum_{i=1}^d w_i x_i$ and $d(u, v) := p(|u-v|)$, where $t \to p(t)$ is convex and strictly increasing for $t\geq 0$, while $\mu:=\mathcal{L}^d\res [0,1]^d$. Then
+	\[
+	C_f(n) =  \left|\frac{1}{\prod_i w_i} \int_{-w_1/2}^{w_1/2}\ldots \int_{-w_d/2}^{w_d/2} p\left(\left|\sum_{i} x_i/n_i\right|\right)\, dx_d \ldots dx_1\right|.
+	\]
+	Moreover, the best quantization functions are uniform, i.e. for $x \in [0, 1]^d$ take
+	\[
+	q_i(x_i) = \frac{\lfloor n_ix_i \rfloor}{n_i} + \frac{1}{2n_i}
+	\]
+\end{theorem}
+
+
+
+\begin{proof} The absolute value in the formula for $C_f$ is to cover the case of negative coefficients, but in the proof it is convenient to consider $w_i > 0$. To see that this restriction does not lose generality, note that linearity of $f$ allows us to shift the defining measure $\mathcal{L}^d\res[0, 1]^d$ to $\mathcal{L}^d\res[-1/2, 1/2]^d$. This translation changes $f$ up to a constant, but a constant additive gets canceled in $f(x) - f(q(x))$. Now, when we work in the symmetrical region, for a negative $w_i$ one can change $x_i \to -x_i$ and $w_i \to -w_i$. The function $f$ and the measure $\mu$ does not change, i.e. the error remains the same. Therefore, we work with the case $w_i > 0$.
+
+	Let $\tilde A^i_k, k \in \{1, \ldots, n_i\}$ denote the level sets of $q_i, i \in \{1, \ldots, d\}$. Then
+	
+\begin{align*}
+	C_f(n_1, \ldots, n_d) &= \sum_{k_1 = 1}^{n_1} \ldots \sum_{k_d = 1}^{n_d} \int_{\tilde{A}_{k_1}^1\times\ldots \times \tilde{A}_{k_d}^d} p(|\sum_i w_i \tilde x_i-c_{k_1, \ldots, k_d}|)\, d\tilde x \\
+	&=  \sum_{k_1 = 1}^{n_1} \ldots \sum_{k_d = 1}^{n_d}\frac{1}{\prod_i w_i} \int_{A_{k_1}^1\times\ldots \times A_{k_d}^d} p(|\sum_i x_i -c_{k_1, \ldots, k_d}|)\, d x,                                        
+\end{align*}	 
+	where $A_k^i = w_i \tilde A_k^i$. Note that $A_k^i, k = 1, \ldots, n_i$ cover $[0, w_i]$. Let us write one error term in the following way
+	\[
+	\int_{A_{k_1}^1\times\ldots \times A_{k_d}^d} p(|\sum_i x_i -c_{k_1, \ldots, k_d}|)\, d x
+	= \int_{A_{k_1}^1} G(x_1)\, d x_1,
+	\]
+	where
+	\[
+	G(x_1) = \int_{A_{k_2}^2\times\ldots \times A_{k_d}^d}  p(|\sum_i x_i -c_{k_1, \ldots, k_d}|)\, dx_d \ldots dx_2.
+	\]
+	Note, that all the functions $x_1 \to p(|\sum_i x_i -c_{k_1, \ldots, k_d}|)$ are convex, implying that the function $G(x_1)$ is also convex. In addition, $G(x_1)$ is not monotone, since $G(-\infty)=\infty$ and $G(\infty)=\infty$. Therefore, for some point $\alpha$ the function $G(x_1)$ decreases up to $\alpha$ and increases after. 
+	
+	Now, consider the following transformation of $A_{k_1}^1$ into an interval of the same measure. Denote $2a_{k_1}^1 = |A_{k_1}^1|$. Take $t\in\mathbb{R}$ such that $\alpha - t = |A_{k_1}^1 \cap (-\infty, \alpha)|$. Let us show that
+	\[
+	\int_{A_{k_1}^1} G(x_1)\,dx_1 \geq \int_t^{t+2a_{k_1}^1} G(x_1)\,dx_1. 
+	\]
+	We divide this inequality into two separate ones -- integrating up to $\alpha$ and after $\alpha$. They are similar, so let us prove the first one, i.e. that
+	\[
+	\int_{-\infty}^{\alpha} \1_{A_{k_1}^1}(x_1) G(x_1) \, dx_1
+	\geq \int_{-\infty}^{\alpha} \1_{[t, \alpha]}(x_1) G(x_1) \, dx_1.
+	\]
+	After integrating both sides by parts, it remains to prove that
+	\[
+	|A_{k_1}^1 \cap (-\infty, \alpha)| G(\alpha) - \int_{-\infty}^{\alpha} |A_{k_1}^1 \cap (-\infty, x_1)| dG(x_1) 
+	\geq |\alpha - t| G(x_1) - \int_{t}^{\alpha} |x_1 - t| dG(x_1). 
+	\]
+	The first parts are equal due to the definition of $t$. To compare the integrals, taking into the account that $G(x_1)$ is decreasing for $x_1 < \alpha$, it is enough to show that $|A_{k_1}^1 \cap (-\infty, x_1)| \geq |x_1- t|$ for $x_1 \in (t, \alpha)$. It follows from an obvious observation that $|A_{k_1}^1 \cap (x_1, \alpha)| \leq |\alpha - x_1|$ for $x_1 < \alpha$, combined with the definition of $t$. 
+		
+	After that, similarly, one by one we transform all the other sets $A_{k_i}^i$ into intervals in a way that decreases the error term. As a result, we get
+	\[
+	\int_{A_{k_1}^1\times\ldots \times A_{k_d}^d} p(|\sum_i x_i -c_{k_1, \ldots, k_d}|)\, d x
+	\geq
+	\int_{t^1}^{t^1 + 2 a_{k_1}^1}\ldots \int_{t^d}^{t^d + 2 a_{k_d}^d} p(|\sum_i x_i -c_{k_1, \ldots, k_d}|)\, d x
+	\]
+	By doing linear change of variables we write the latter integral as
+	\begin{equation}
+	\label{eq_intervals}
+	\int_{-a_{k_1}^1}^{a_{k_1}^1}\ldots \int_{-a_{k_d}^d}^{a_{k_d}^d} p(|\sum_i x_i - c|)\, d x.
+	\end{equation}
+	Now, in order to get rid of $c$ we use the following simple lemma.
+	\begin{lemma}
+		\label{lemma:centr}
+		Let $X$ be a centrally symmetric real random variable and $t \to p(|t|)$ be a convex function with minimum at zero. Then 
+		\[
+		\min_{c\in \mathbb{R}} \E p(|X-c|) = \E p(|X|).
+		\]
+	\end{lemma}	
+	\begin{proof}
+		The function $c \to \E p(|X-c|)$ is convex, because for a fixed $x$ the function $c \to p(|x-c|)$ is convex. Moreover it is centrally symmetric, because $X$ is centrally symmetric
+		\[
+		\E p(|X-c|) = \E p(|-X-c|) = \E p(|X+c|).
+		\]
+		Clearly, any centrally symmetric convex function has its minimum at zero.
+	\end{proof}	
+	The distribution of $X_1+X_2 + \ldots + X_d$ for a vector $(X_1, \ldots, X_d)$ uniformly distributed on $[-a_{k_1}^1, a_{k_1}^1] \times \ldots \times [-a_{k_d}^d, a_{k_d}^d]$ is symmetrical about zero. Therefore, by lemma $\ref{lemma:centr}$ the integral \eqref{eq_intervals} is minimal when $c$ is zero. Note that $c = 0$ is equivalent to $c_{k_1, \ldots, k_d} = t^1+a_{k_1}^1+ \ldots  + t^d + a_{k_d}^d$. Putting all together, we obtain the estimate
+	\begin{align*}
+		\int_{A_{k_1}^1\times\ldots \times A_{k_d}^d} p(|\sum_i x_i -c_{k_1, \ldots, k_d}|)\, d x
+		&\geq  \int_{-a_{k_1}^1}^{a_{k_1}^1}\ldots \int_{-a_{k_d}^d}^{a_{k_d}^d} p(|\sum_i x_i|)\, d x.
+		%\\?=\frac{2(a_i+b_j)^{q+2}-2|a_i-b_j|^{q+2}}{(q+1)(q+2)}.
+	\end{align*}
+	Then, using this for all the terms in the initial formula for a quantization error, we get the inequality
+	\[
+	C_f(n_1, n_2, \ldots, n_d) \geq \frac{1}{\prod w_i} \sum_{k_1=1}^{n_1}\ldots \sum_{k_d=1}^{n_d} \int_{-a_{k_1}^1}^{a_{k_1}^1} \ldots \int_{-a_{k_d}^d}^{a_{k_d}^d} p(|\sum_i x_i|) \, dx,
+	\]
+	where for all $i\in \{1, \ldots, d\}$ one has $\sum_{k_i = 1}^{n_i} a_{k_i}^i = w_i/2$, since $A_{k_i}^i, k_i = 1, \ldots, n_i$ cover $[0, w_i]$ and their measure is defined as $2a_{k_i}^i$.
+	Now, to finish the proof, we have to find the minimum of the right hand side with respect to all $a_{k_i}^i$. This part is purely technical and stated here as a lemma, its proof can be found in the section \ref{section_tech_proofs}.
+	\begin{lemma}
+		\label{lemma_lagrange}
+		For any $n_1, \ldots, n_d \in \mathbb{N}$ and nonnegative numbers $a_{k_i}^i, k_i \in \{1, \ldots, n_i\}, i \in \{1, \ldots, d\}$ such that for any $i$ it is true that 
+		$\sum_{k_i} a_{k_i}^i = w_i/2$, one has
+\begin{equation}\label{eq_est_n12int1}
+\begin{aligned}
+		\sum_{k_1=1}^{n_1}\ldots \sum_{k_d=1}^{n_d} \int_{-a_{k_1}^1}^{a_{k_1}^1} \ldots \int_{-a_{k_d}^d}^{a_{k_d}^d} p(|\sum_i x_i|) \, dx
+		\geq
+		n_1 \ldots n_d \int_{-\frac{w_1}{2n_1}}^{\frac{w_1}{2n_1}} \ldots \int_{-\frac{w_d}{2n_d}}^{\frac{w_d}{2n_d}} p(|\sum_i x_i|) \, dx.
+\end{aligned}	
+\end{equation}	
+\end{lemma}
+	
+This lemma implies that
+	\[
+	C_f(n_1, \ldots, n_d) \geq  \frac{\prod n_i}{\prod w_i}  \int_{-\frac{w_1}{2n_1}}^{\frac{w_1}{2n_1}} \ldots \int_{-\frac{w_d}{2n_d}}^{\frac{w_d}{2n_d}} p(|\sum_i x_i|) \, dx,
+	\]
+which is exactly the lower bound we claimed, subjected to a simple linear change of variables. 
+
+	To prove the second part of the statement one has to check that this error is achieved for a uniform quantization, i.e. for 
+	\[
+	q_i(x_i) = \frac{\lfloor n_ix_i \rfloor}{n_i} + \frac{1}{2n_i}.
+	 \]
+	 Clearly, this statement can be checked via simple calculations, but to avoid those we can verify that all the inequalities in the proof of the lower bound become equalities. 
+	\begin{itemize}
+		\item All $A_{k_i}^i$ are already intervals.
+		\item Every $c_{k_1, \ldots, k_d}$ is exactly sum of the centers of $A_{k_i}^i$.
+		\item All $a_{k_i}^i, k_i \in \{1, \ldots, n_i\}$ are the same for any fixed $i$.
+	\end{itemize}	
+\end{proof}
+
+
+One might wonder what is the best quantizing error when the total number of points in the grid $n_1 n_2 \ldots n_d$ is fixed. The next remark answers this question, its proof is postponed to the section \ref{section_tech_proofs}.
+\begin{remark}
+	\label{rem_linear}
+	If $n_1 n_2 \ldots n_d$ is fixed, the minimum of $C_f$ in the theorem \ref{th_quantLinear1} is at $n_1/w_1 = n_2/w_2 = \ldots = n_d/w_d$. 
+\end{remark}	
+
+A standard example of a distance function is the Minkowski distance. In this case, the error can be calculated explicitly.
+
+\begin{remark}
+	\label{rem_exact_err}
+	For a linear function  $f(\v x) = \sum_{i = 1}^d w_i x_i$, Minkowski distance $d(u, v) = |u-v|^q, q \geq 1$ and Lebesgue measure $\mu(\v x) = \mathcal{L}^d\res [0,1]^d $ Theorem~\ref{th_quantLinear1} gives the exact error
+	\textcolor{blue}{\[
+	C_f = \frac{n_1 n_2}{2^{q+1}(q+1)(q+2)w_1w_2}\left(\left(\frac{w_1}{n_1}+\frac{w_2}{n_2}\right)^{q+2} - \left|\frac{w_1}{n_1}-\frac{w_2}{n_2}\right|^{q+2}\right).
+	\]}
+	\textcolor{red}{\[
+	C_f = \frac{\prod_i n_i w_i^{-1}}{2^{q+d} q(q+1) \ldots (q+d-1)} \sum_{\eps_1 \in \{-1, 1\}} \ldots \sum_{\eps_d \in \{-1, 1\}} \prod_i \eps_{i} \left|\sum_i \frac{\eps_i w_i}{n_i}\right|^{q+d}.
+	\]}
+\end{remark}	
+
+
+\textcolor{blue}{\begin{remark}
+	Under conditions of remark ~\ref{rem_exact_err}, when $w_1/n_1 \to 0$ we get
+	\[
+	C_f \to \frac{w_2^q}{2^q (q+1) n_2^q}.
+	\]
+\end{remark}}
+
+\textcolor{red}{\begin{remark}
+	\label{loss_asymp}
+	Under conditions of remark ~\ref{rem_exact_err}, when $N= n_1+n_2+\ldots + n_d$ is fixed, one can show that the best possible quantizing error has the following order
+	\[
+	\min_{\v n: \sum_i n_i = N} C_f \sim C/N^q,
+	\]
+	with $C=C(\v w)>0$.
+\end{remark}}
+
+\subsection{Lower bounds for monotone functions}
+The approach we used for a linear function works in a slightly more general case, but gives only a lower bound.
+
+\begin{theorem}
+	Let $f(x_1, \ldots, x_d)$ be monotone in each coordinate and satisfy $|f(x_1, \ldots, x_i + \Delta_i, \ldots, x_d) - f(x_1, \ldots, x_d)| \geq w_i \Delta_i$ for all $i\in \{1, \ldots, d\}$ and some positive $w_i$. In addition, $d(u, v) = p(|u-v|)$ for an increasing function $t \to p(t), t\geq 0$ and $\mu = \mathcal{L}^d\res [0,1]^d$. Then 
+	\[
+	\mathcal{C}_f(n_1, \ldots, n_d) \geq \frac{1}{\prod w_i} \int_0^{\frac{w_1}{2}} \ldots \int_0^{\frac{w_d}{2}} p(|\sum_i x_i/n_i|)\, dx.
+	\]
+\end{theorem}
+\begin{proof}
+	First of all, $f$ is not required to be increasing in each coordinate, similarly to the linear case, where negativity of coefficients does not affect the result. To see this, one can use translation to work with $\mathcal{L}^d\res [-1/2,1/2]^d$ instead of $\mathcal{L}^d\res [-1/2,1/2]^d$ and then change sign of all coordinates along which $f$ is decreasing, obataining a new function that is increasing in each coordinate.
+	
+	Let $A^i_k, k \in \{1, \ldots, n_i\}$ denote the level sets of $q_i, i \in \{1, \ldots, d\}$. Then
+\begin{align*}
+	C_f(n_1, \ldots, n_d) &= \sum_{k_1 = 1}^{n_1} \ldots \sum_{k_d = 1}^{n_d} \int_{A_{k_1}^1\times\ldots \times A_{k_d}^d} p(|f(x)-c_{k_1, \ldots, k_d}|)\, d x.                                       
+\end{align*}	
+Denote $A_{k_1, \ldots, k_d} = A_{k_1}^1\times \ldots \times A_{k_d}^d$. 
+Let us estimate one term of this sum as follows. Denote centers of mass of $A^i_{k_i}$ as $\alpha_i$ respectively. Consider the case $f(\alpha_1, \ldots, \alpha_d) > c_{k_1, \ldots, k_d}$, the opposite one is completely analogous. Since $f$ is increasing in each coordinate, one has $f(x_1, \ldots, x_d) > f(\alpha_1, \ldots, \alpha_d) > c_{k_1, \ldots, k_d}$ when all $x_i > \alpha_i$ (for the opposite case take all $x_i < \alpha_i$). Then, from monotonicity of $p(\cdot)$ we obtain
+\[
+\int_{A_{k_1, \ldots, k_d}} p(|f(x)-c_{k_1, \ldots, k_d}|)\, d x
+ \geq \int_{\alpha_1}^{\infty} \ldots \int_{\alpha_d}^{\infty} \1_{A_{k_1, \ldots, k_d}}(x) p(|f(x) - f(\alpha)|) \, d x
+\]
+From the condition of $f$ we get a lower bound 
+\[
+\int_{\alpha_1}^{\infty} \ldots \int_{\alpha_d}^{\infty} \1_{A_{k_1, \ldots, k_d}}(x) p(|\sum_i w_i (x_i - \alpha_i)|)\, dx.
+\]
+For $2a_{k_i}^i = |A_{k_i}^i|$, since $\alpha_i$ is a center of mass of $A_{k_i}^i$, this integral is not less than
+\[
+\int_{\alpha_1}^{\alpha_1 + a_{k_1}^1} \ldots \int_{\alpha_d}^{\alpha_d + a_{k_d}^d} p(|\sum_i w_i (x_i - \alpha_i)|) dx
+= \int_{0}^{a_{k_1}^1}\ldots \int_{0}^{a_{k_d}^d} p(|\sum_i w_i x_i|) \, dx.
+\]
+By definition, $A_{k_i}^i, k_i = 1,\ldots, n_i$ cover $[0, 1]$, thus $\sum_{k_i = 1}^{n_i} a_{k_{i}}^i = 1/2$.
+Combining this for all terms in $C_f$ we get a lower bound
+\[
+\mathcal{C}_f(n_1, \ldots, n_d) \geq \min_{a_{k_i}^i : \sum_{k_i = 1}^{n_i} a_{k_i}^i = 1/2} \sum_{k_1 = 1}^{n_1} \ldots \sum_{k_d=1}^{n_d} \int_0^{a_{k_1}^1} \ldots \int_0^{a_{k_d}^d} p(|\sum_i w_i x_i|)\, dx. 
+\]
+It remains to show the the right hand side attains its minimum for $a_{k_i}^i = \frac{1}{2n_i}$.
+The proof of this bound is based on the same idea, as the proof of lemma \ref{lemma_lagrange}, i.e. uses the Lagrange condition, but it is easier because all the variables are positive now.
+It remains to prove that
+	\[
+	\sum_{k_1 = 1}^{n_1} \ldots \sum_{k_d=1}^{n_d} \int_0^{a_{k_1}^1} \ldots \int_0^{a_{k_d}^d} p(|\sum_i w_i x_i|)\, dx
+	\geq \prod_i n_i \int_0^{\frac{1}{2n_1}}\ldots \int_0^{\frac{1}{2n_d}} p(|\sum_i w_i x_i|)\, dx,
+	\]
+because after a linear change of variables $y_i = w_i n_i x_i$ the latter integral becomes exactly what we need, namely
+\[
+\frac{1}{\prod_i w_i} \int_0^{\frac{w_1}{2}}\ldots \int_0^{\frac{w_d}{2}} p(|\sum_i y_i/n_i|) dy.
+\]
+Clearly, this expression is decreasing in $n_i$. Now, we use a standard argument. Take $n_1, \ldots, n_d$ contradicting the inequality with the smallest sum. Since the condition $\sum_{k_i=1}^{n_i} a_{k_i}^i = 1/2, a_{k_i}^i \geq 0$ describes a compact space and the difference between l.h.s. and r.h.s. is continuous in this space, it attains its minimum at some point, clearly that minimum being less than zero. At this point all $a_{k_i}^i$ are strictly positive, otherwise one could get rid of zero values, as this would only increase right hand side due to its monotonicity in $n_i$, but would not change the left hand side. In other words, we would obtain a contradictory configuration with smaller sum of $n_i$. Finally, when all the variables are strictly positive, one can apply Lagrange conditions and get that all the partial derivatives with respect to $a_{k_i}^i$ are the same for any fixed $i$.
+	Consider the derivative with respect to $a_{k_1}^1$
+	\[
+	\sum_{k_2 = 1}^{n_2} \ldots \sum_{k_d=1}^{n_d} \int_0^{a_{k_2}^2} \ldots \int_0^{a_{k_d}^d} p(|w_1a_{k_1}^1 + \sum_{i=2}^d w_i x_i|)\, dx_d\ldots dx_2.
+	\]
+	It is monotone in $a_{k_1}^1$, i.e. Lagrange condition implies $a_{1}^1 = \ldots = a_{n_1}^1$. Similarly we get $a_{1}^i = \ldots = a_{n_i}^i$, but this is exactly the point of equality. 
+
+\end{proof}
+
+\begin{remark}
+	Using this lower bound for a linear function $f$ we would get a result worse than the exact error in Theorem \ref{th_quantLinear1}, but it loses only by a factor not greater than $2^d$. On the other hand, the restrictions in Theorem \ref{th_quantLinear1} are stronger, because the function $t \to p(|t|)$ is convex and $f$ is linear.
+\end{remark}
+
+
+
+The following easy statement is also worth mentioning.
+
+\begin{proposition}
+	\label{prop_measDominance}
+	For any function $f$ and nonnegative distance $d$ and two measures $\mu \leq \nu$, in the sense that for any Borel set $B$ one has $\mu(B)\leq \nu(B)$, it is true that
+	\[
+	C_{f, d, \mu} (\v n) \leq C_{f, d, \nu} (\v n).
+	\]
+\end{proposition}	
+
+\begin{proof}
+	For any quantization functions $q_1, q_2$ one has
+	\begin{align*}
+	L_{f, d, \mu} (\v q) &= \int d(f(\v x), f(q_1(x_1), \ldots, q_d(x_d))) \,d \mu(\v x)
+	\\ &\leq \int d(f(\v x), f(q_1(x_1), \ldots, q_d(x_d))) \,d \nu(\v x) =
+	L_{f, d, \nu} (\v q).
+	\end{align*}
+	By passing to the infimum over all $\v q$ we finish the proof.
+\end{proof}
+
+This immediately implies the following corollary,
+
+\begin{corollary}
+	Let $f$ and $d$ be as in Theorem~\ref{th_quantLinear1}. If for some rectangle $R = [a_1, a_1 + r_1] \times \ldots \times [a_d, a_d + r_d]$ one has the inequality $\mu \leq C \1_R \, \mathcal{L}^d$, it is true that
+	\[
+	\mathcal{C}_{f, d, \mu} 
+	 \leq \left|\frac{C}{\prod_i w_i r_i} \int_{-w_1r_1/2}^{w_1r_1/2}\ldots \int_{-w_dr_d/2}^{w_dr_d/2} p\left(\left|\sum_{i} x_i/n_i\right|\right)\, d\v x\right|.
+	\]
+	If for some rectangle $R' = [a_1, a_1+r_1']\times\ldots\times [a_d, a_d+r_d']$ one has $\mu \geq c 1_{R'}\, \mathcal{L}^d$, then
+	\[
+	\mathcal{C}_{f, d, \mu} 
+	 \geq \left|\frac{c}{\prod_i w_i r_i'} \int_{-w_1r_1'/2}^{w_1r_1'/2}\ldots \int_{-w_dr_d'/2}^{w_dr_d'/2} p\left(\left|\sum_{i} x_i/n_i\right|\right)\, d\v x\right|
+	\]
+	In particular, for a distance function $d(u, v) = |u-v|^q, q\geq 1$, if $N=n_1+\ldots + n_d$ is fixed and $\mu\ll \, \mathcal{L}^d$ with bounded l.s.c. density and compact support, then
+	\[
+	\frac{c}{N^q}\leq \mathcal{C}_{f, d, \mu} \leq 	\frac{C}{N^q}\
+	\]
+	for some $c>0$, $C>0$ depending on the data. 
+\end{corollary}	
+
+\begin{proof}
+	Note that due to Proposition~\ref{prop_measDominance} for the upper estimate it is enough to prove the same upper bound for the measure $C \mathcal{L}^d\res R$. Since $f$ is linear we can change the variables $y_i = (x_i-a_i)/r_i$, where $\v y \in [0, 1]^d$. Then $f(\v x) := \sum_i w_i x_i = \sum w_i r_i y_i + const = \tilde f (\v y)$ for a linear function $\tilde f$. The distance $d(u, v)$ is translation invariant, thus the constant in $\tilde f$ can be omited. Finally, the loss $\mathcal{L}_{f, \mu} (\v q)$ is clearly linear in $\mu$, therefore we can use Theorem~\ref{th_quantLinear1} to obtain claimed estimate.
+	The lower estimate is completely analogous and the last statement follows from the Remark \ref{loss_asymp}.
+\end{proof}	
+
+\subsection{Further examples of functions over $\R\times \R$}
+
+For the quadratic cost $d(u, v) := |u-v|^2$ we are able to say slightly more. 
+
+\begin{theorem}
+	Let $f(\v x) = \sum_{i = 1}^d \phi_i(x_i)$, where all $\phi_i$ \textcolor{red}{have convex image} and $d(u, v) := |u-v|^2$. Let $X_i$ be independent with $\mathrm{law}(X_i)=\nu_i$, so that the joint law is $\mu = \otimes_i \nu_i$. Then one can choose the best quantization functions $q_i(x_i)$ independently from each other, minimizing $\E |\phi_i(X_i) - \phi_i(q_i(X_i))|^2$ respectively.
+	The error is then the sum of errors, i.e. 
+	\[
+	C_f(\v n) =
+ \sum_{i = 1}^d C_{\phi_i, d, \nu_i}(n_i)
+	\]	
+\end{theorem}	
+
+\begin{proof}
+	Let $A_k^i, k\in \{1, \ldots, n_i\}$ denote the level sets of $q_i$ respectively. Then
+	\begin{align*}
+		L_f (\v q)= \sum_{k_1 = 1}^{n_1} \ldots \sum_{k_d = 1}^{n_d} \int_{A_{k_d}^d}\ldots \int_{A_{k_1}^1} \left(\sum_i \phi_i(x_i)-c_{k_1, \ldots, k_d}\right)^2\, d \nu_1(x_1) \ldots d \nu_d(x_d).
+	\end{align*}
+	
+	Consider one term of this sum.
+	Define a random vector
+	\[
+	(X_{k_1}^1, \ldots, X_{k_d}^d) = (\v X | \v X \in A_{k_1}^1 \times \ldots \times A_{k_d}^d) \sim \otimes_i \1_{A_{k_i}^i}\frac{\nu_i}{\nu_i(A_{k_i}^i)}.
+	\]
+	The integral can be expressed as
+	\[
+	\int_{A_{k_1}^1\times \ldots \times A_{k_d}^d}\left(\sum_i \phi_i(x_i)-c_{\v k}\right)^2\, d \mu(\v x)  = \prod_i \nu_i(A_{k_i}^i)\E \left[\left(\sum_i \phi_i(X_{k_i}^i)-c_{\v k}\right)^2\right].
+	\]
+	It is well-known (one can show it by taking the derivative with respect to c), that this expectation is at minimum for 
+	\[
+	c_{\v k} = \E \left[\sum_i \phi_i(X_{k_i}^i)\right] = \sum_i \E [\phi_i(X_{k_i}^i)]
+	\]
+	and for such a choice of $c_{\v k}$ we get
+	\[
+	\Var \left[\sum_i \phi_i(X_{k_i}^i)\right] = \sum_i \Var \left[\phi_i(X_{k_i}^i)\right],
+	\] 
+	because the variables $X_{k_i}$ are independent. Consequently, we obtain a lower bound
+	\begin{align*}
+	L_f (\v q) \geq  \sum_{k_1=1}^{n_1}\ldots \sum_{k_d=1}^{n_d} \left(\prod_{i=1}^{d} \nu_i(A_{k_i}^i)\sum_{i=1}^n \Var [\phi_i(X_{k_i}^i)]\right)
+	= \sum_{i=1}^d \sum_{k_i=1}^{n_i}\nu_i(A_{k_i}^i)\Var \phi_i(X_{k_i}^i),
+		\end{align*}
+	and the equality is achieved for the right choice of $c_{\v k}$, namely $c_{\v k} = \sum_i \E \phi_i(X_{k_i}^i)$. Recall that $c_{\v k} = \sum_i \phi_i(x_{k_i}^i)$, where $x_{k_i}^i$ are quantization points for $A_{k_i}^i$ respectively. Pick $x_{k_i}^i \in \phi_i^{-1}(\E \phi(X_{k_i}^i))$, it is possible because all $\phi_i$ have convex image. Therefore, for fixed level sets of $q_i$ and the best choice of their values we get
+	\[
+	L_f(\v q) = \sum_{i=1}^d \sum_{k_i=1}^{n_i}\nu_i(A_{k_i}^i)\Var \phi_i(X_{k_i}^i).
+	\]
+	
+	 What is convenient here, is that different quantizers are completely separated, reducing the problem to a classical quantization.
+	
+	More precisely, one term of this sum is exactly a classical quantization error for the same choice of $q_i$
+	\[
+	\sum_{k = 1}^{n_i} \nu_i(A_k^i) \Var \phi_i (X_k^i) = L_{\phi_i, d, \nu_i}(q_i).
+	\]
+	This follows from exactly the same argument that we used to obtain this sum in the first place. Therefore, one can pick the best quantizers minimizing their own errors.
+\end{proof}	
+
+The above theorem can be combined with the following statement (of immediate proof) to provide a lot of examples for the asymptotic behaviour of costs.
+
+\begin{lemma}
+	\label{lem_gf}
+	Let $g\colon \R\to \R$ satisfy the estimate
+	\[
+	\underline{d} (x, y)\leq  d(g(x), g(y))\leq \bar d(x, y)
+	\]
+	for all $ x ,y \in f(\supp\mu)$.
+	Then 
+	\[
+C_{f,\underline{d}} (n_1,n_2)\leq  C_{g\circ f, d}(n_1,n_2)\leq C_{f,\bar{d}} (n_1,n_2).	
+	\]
+\end{lemma}
+
+
+\begin{corollary}
+Let $d(u, v) = p(|u-v|)$ for an increasing function $p(t), t\geq 0$ and $\mu = \mathcal{L}^d\res [0,1]^d$. Let $f(\v x) = g(\langle w, x\rangle)$.
+\\Assuming that for some function $s$ it is true that $(p \circ s) (t), t\geq 0$ is convex increasing and $|g(a)-g(b)|\leq s(|a-b|), a, b$ in the range of $x\to \langle w, x \rangle$, one has
+\[
+\mathcal{C}_f(\v n)\leq \left|\frac{1}{\prod_i w_i} \int_{-w_1/2}^{w_1/2}\ldots \int_{-w_d/2}^{w_d/2} (p\circ s)\left(\left|\sum_i x_i/n_i\right|\right)\, d\v x\right|
+\]
+\\Assuming that for some convex function $r$ it is true that $(p \circ s) (t), t\geq 0$ is convex increasing and $|g(a)-g(b)|\geq r(|a-b|), a, b $ in the range of $x\to \langle w, x \rangle$, one has
+\[
+\mathcal{C}_f(\v n)\geq \left|\frac{1}{\prod_i w_i} \int_{-w_1/2}^{w_1/2}\ldots \int_{-w_d/2}^{w_d/2} (p\circ r)\left(\left|\sum_i x_i/n_i\right|\right)\, d\v x\right|.
+\]
+\end{corollary}
+\begin{proof}
+	Both inequalities immediately follow from Lemma \ref{lem_gf} and Theorem \ref{th_quantLinear1}.
+\end{proof}	
+\begin{remark}
+	Let $f(x, y) = g(\langle w, x \rangle)$, where $g$ is $\alpha$-H\" older with a constant C, $d(u, v) = |u-v|^q, q\geq 1/\alpha$, and $\mu:=\mathcal{L}^d\res [0,1]^d$. Then
+	\[
+	\mathcal{C}_f(\v n) \leq \frac{C^q \prod_i n_i w_i^{-1}}{2^{\alpha q+d} \alpha q(\alpha q+1) \ldots (\alpha q+d-1)} \sum_{\eps_1 \in \{-1, 1\}} \ldots \sum_{\eps_d \in \{-1, 1\}} \prod_i \eps_{i} \left|\sum \frac{\eps_i w_i}{n_i}\right|^{\alpha q+d}.
+	\]
+\end{remark}	
+\begin{proof}
+	Note that $d(g(x), g(y)) = |g(x)-g(y)|^q \leq C^q |x-y|^{\alpha q}$. Therefore, by using Lemma \ref{lem_gf} and Remark \ref{rem_exact_err} we obtain the inequality.	
+\end{proof}	
+\begin{remark}
+	Let $f(x, y) = g(\langle w, x \rangle)$, where $|g(a)-g(b)| \geq c |a-b|^{\alpha}, \{a, b\} $ in the range of $x\to \langle w, x \rangle$, $d(u, v) = |u-v|^q, q\geq 1/\alpha$, and $\mu:=\mathcal{L}^d\res [0,1]^d$. Then
+	\[
+	\mathcal{C}_f(\v n) \geq \frac{c^q \prod_i n_i w_i^{-1}}{2^{\alpha q+d} \alpha q(\alpha q+1) \ldots (\alpha q+d-1)} \sum_{\eps_1 \in \{-1, 1\}} \ldots \sum_{\eps_d \in \{-1, 1\}} \prod_i \eps_{i} \left|\sum \frac{\eps_i w_i}{n_i}\right|^{\alpha q+d}.
+	\]
+\end{remark}	
+\begin{proof}
+	Note that $d(g(x), g(y)) = |g(x)-g(y)|^q \geq c^q |x-y|^{\alpha q}$. Consequently, Lemma \ref{lem_gf} and Remark \ref{rem_exact_err} combined prove the inequality.	
+\end{proof}	
+
+\begin{corollary}
+	Let $f(\v x) = g(\sum_i \phi_i(x_i))$ and $d(g(a), g(b)) \leq |a-b|^2$, while $X_i$ are independent with the joint law $\otimes_i \nu_i$. Then 
+	\[
+	\mathcal{C}_f(\v n) \leq \sum_{i=1}^d C_{2,\phi_i,\nu_i}(n_i).
+	\]
+\end{corollary}	
+\begin{corollary}
+	Let $f(\v x) = g( \sum_i \phi_i(x_i))$ and $d(g(a), g(b)) \geq |a-b|^2$, while $X_i$ are independent with the joint law $\otimes_i \nu_i$. Then 
+	\[
+	\mathcal{C}_f(\v n) \geq \sum_{i=1}^d C_{2,\phi_i, \nu_i}(n_i).
+	\]
+\end{corollary}
+\begin{remark}
+	\label{holder_upper_bound}
+	Let $f(\v x) = g( \sum_i \phi_i(x_i))$ and $d(u, v) = |u-v|^q$, where $g$ is $2/q$ - H\" older with a constant $R$, while the joint law of $X_i$ is $\otimes_i \nu_i$. Then
+	\[
+	\mathcal{C}_f(\v n) \leq R \cdot \sum_{i=1}^d C_{2,\phi_i, \nu_i}(n_i).
+	\]
+\end{remark}	
+\begin{remark}
+	\label{holder_lower_bound}
+	Let $f(\v x) = g( \sum_i \phi_i(x_i))$ and $d(u, v) = |u-v|^q$, where $|g(a) - g(b)| \geq r |a-b|^{2/q}$, while the joint law of $X_i$ is $\otimes_i \nu_i$. Then
+	\[
+	\mathcal{C}_f(\v n) \geq r \cdot \sum_{i=1}^d (C_{2,\phi_i, \nu_i}(n_i).
+	\]
+\end{remark}	
+
+The next statement demonstrates how one can estimate the error by using general results listed here. 
+For simplicity of calculations, consider $d = 2$. 
+\begin{remark}
+	Let $f(x, y) = \phi(x) + \psi(y)$ and $d(u, v) = |1-u/v|^2$, while the joint law of $X$ and $Y$ is $\mu \otimes \nu$ supported on $[a_1, a_2] \times [b_1, b_2]$, with $a_1>0$ and $b_1 > 0$. Assume that $f(x, y) > \delta > 0$ on a support of $\mu \otimes \nu$ (so that our distance function does not tend to infinity inside the area we are working with). Then, as $n_1, n_2 \to \infty$ one has
+	\[
+	\mathcal{C}_f(n_1, n_2) \leq \frac{1+o(1)}{a_1 + b_1} (C_{2,\phi_\#\mu}(n_1) + C_{2,\psi_\#\nu}(n_2))
+	\]
+	and for some constant c
+	\[
+	\mathcal{C}_f(n_1, n_2) \geq c (C_{2,\phi_\#\mu}(n_1) + C_{2,\psi_\#\nu}(n_2)).
+	\]
+\end{remark}
+\begin{proof}
+	Note that as $u/v \to 1$ one has $d(u, v) = |1-u/v|^2 \sim |\ln u - \ln v|^2$. Quantizing $f$ with a distance function $|\ln u -\ln v|^2$ is the same as quantizing $\tilde f(x, y) = \ln(\phi(x) + \psi(y))$ with $\tilde d(u, v) = |u-v|^2$ while the joint law of $X$ and $Y$ is $\mu \otimes \nu$. Then the previous remarks provide us with inequalities
+	\[
+	\mathcal{C}_{\tilde f}(n_1, n_2) \leq \frac{1}{a_1 + b_1} (C_{2,\phi_\#\mu}(n_1) + C_{2,\psi_\#\nu}(n_2))
+	\]
+	and
+	\[
+	\mathcal{C}_{\tilde f}(n_1, n_2) \geq \frac{1}{a_2 + b_2} (C_{2,\phi_\#\mu}(n_1) + C_{2,\psi_\#\nu}(n_2)).
+	\]
+	It remains to check how good the approximation $|1 - u/v|^2 \sim |\ln u - \ln v|^2$ is. 
+	First of all, for an upper bound we use a uniform quantization, therefore the ratio $f(x, y)/f(q_1(x), q_2(y))$ tends to 1 uniformly over all $x, y$ in this case. That is why the approximation is good enough for an upper bound.
+	Now let us assume that we can achieve a better quantizing error, i.e. there is a sequence of quantizers $q_1, q_2 = q_1(n_1, n_2), q_2(n_1, n_2)$ with an error $L_f(q_1, q_2)$ better that the one we claim. Lemma \ref{lem:quant_zero_measure} implies that the maximum measure of level sets of quantizers tends to zero, as $n_1, n_2 \to \infty$. The actual lower bound can be written in the following way. We divide all the points $(x, y) \in [a_1, a_2]\times [b_1, b_2]$ into two classes $S_{\eps}$ and $B_{\eps}$, where $S_{\eps} = \{(x, y) : |1-f(q_1(x), q_2(y))/f(x, y)| < \eps\}$ and $B_\eps = [a_1, a_2]\times [b_1, b_2] \setminus S_\varepsilon$. To calculate the error divide the integral into 2 parts integrating over $S_\eps$ and $B_\eps$ respectively. The latter integral is trivially bounded from below, thus we get
+	\begin{eqnarray*}
+	\mathcal{L}_f(q_1, q_2) \geq 
+	\int_{S_\eps} |1 - f(q_1(x), q_2(y))/f(x, y) |^2 \mu(dx) \otimes \nu (dy) + \eps^2 \mu\otimes\nu(B_\eps).
+	\end{eqnarray*}
+	Now since our error is asymptotically better than $C_{2,\phi_\#\mu}(n_1) + C_{2,\psi_\#\nu}(n_2)$ one can pick $\eps = \eps(n_1, n_2) \to 0$ so slowly, as $n_1, n_2 \to \infty$, such that inevitably $\mu \otimes \nu (B_\eps) = o(C_{2,\phi_\#\mu}(n_1) + C_{2,\psi_\#\nu}(n_2)$, because $\eps^2 \nu\otimes \mu(B_\eps) = O(L_f(q_1, q_2)) = o (C_{2,\phi_\#\mu}(n_1) + C_{2,\psi_\#\nu}(n_2))$. Thus almost the whole measure is concentrated in $S_\eps$ and in $S_\eps$ one has $f(q_1(x), q_2(y))/f(x, y)$ uniformly close to 1, i.e. the distance $|1-u/v|^2 \sim |\ln u - \ln v|^2$ there. Thereby, as $n_1, n_2 \to \infty$
+	\begin{eqnarray*}
+	\int_{S_\eps} |1- f(q_1(x), q_2(y))/f(x, y)|^2 \mu(dx) \otimes \nu(dy) 
+	\\ \geq \int_{S_{\eps}} |\ln f(q_1(x), q_2(y)) - \ln f(x, y)|^2 (1-\eps) \mu(dx) \otimes \nu(dy)
+	\\ \sim \int_{S_{\eps}\cup B_{\eps}} |\ln f(q_1(x), q_2(y)) - \ln f(x, y)|^2 \mu(dx) \otimes \nu(dy).
+	\end{eqnarray*}
+The last part is due to the fact that $\eps \to 0$ and that since the integrable function is uniformly bounded and the for the measure we know that $\mu \otimes \nu(B_\eps) = o(C_{2,\phi_\#\mu}(n_1) + C_{2,\psi_\#\nu}(n_2))$ we obtain
+\[
+\int_{B_{\eps}} |\ln f(q_1(x), q_2(y)) - \ln f(x, y)|^2 \mu(dx) \otimes \nu(dy) = o(C_{2,\phi_\#\mu}(n_1) + C_{2,\psi_\#\nu}(n_2)).
+\]
+On the other hand
+\[
+\int_{S_{\eps}\cup B_{\eps}} |\ln f(q_1(x), q_2(y)) - \ln f(x, y)|^2 \mu(dx) \otimes \nu(dy) \asymp C_{2,\phi_\#\mu}(n_1) + C_{2,\psi_\#\nu}(n_2).
+\]
+Thus the equivalence for the distance is good enough for the lower bound too, i.e. there is no asymptotically better quantization possible for $|1-u/v|^2$ rather than one considered for $|\ln u - \ln v|^2$.
+\end{proof}
+
+\begin{example}
+	Let $f(x, y) = (x+y)^2$, $d(u, v) = |u-v|^2$, while the joint law of $X$ and $Y$ is $\mu \times \nu$ in a rectangle $[a_1, a_2] \times [b_1, b_2]$. Then 
+	\[
+	\mathcal{C}_f (n_1, n_2) \leq 2 (\max (|a_1|, |a_2|) + \max (|b_1|,  |b_2|)) (C_{2, x_\#\mu}(n_1) + C_{2, y_\#\nu}(n_2))
+	\]
+	and if $a_1\geq 0, b_1 \geq 0$ and they are not $0$ simultaneously, one has
+	\[
+	\mathcal{C}_f (n_1, n_2) \geq 2 (a_1 + b_1) (C_{2, x_\#\mu}(n_1) + C_{2, y_\#\nu}(n_2))
+	\]
+\end{example}	
+
+\begin{proof}
+	This example immediately follows from Remarks \ref{holder_lower_bound} and \ref{holder_upper_bound}. Here $g(t) = t^2$, i.e. $g'(t) = 2t$, thereby $g$ is a Lipschitz function with a constant $2(\max (|a_1|, |a_2|) + \max (|b_1|, b_2))$ and the first claim is true. Additionally, if $a_1 \geq 0, b_1 \geq 0$ it is true that $|g(t) - g(s)| \geq 2(a_1+b_1)|t-s|$ for all $t, s \in [a_1 + b_1, a_2+b_2]$ and consequently the second claim is true.
+\end{proof}
+
+
+
+\section{General upper estimate for Sobolev functions}
+	
+Assume that $X_i$ are random vectors in $\mathcal{X}_i = \R^{k_i}, i\in\{1, \ldots, d\}$.
+Set $k:= \sum_i k_i$.
+	
+%	\begin{proposition} \label{prop_estC1upper}
+%		Let $\Omega:= (0, r_1)^{d_1}\times (0, r_2)^{d_2}$. 
+%		If $\mu\ll dx$ with density $\phi\in L^\infty(\R^d)$ has compact support $\supp \phi \subset \Omega$, while  $d(u, v) = |u-v|$. Then one has
+%\begin{equation}\label{eq_upestBV1C1}
+%		C_f(n_1, n_2) \leq \tilde C_f (n_1, n_2) 
+%		\leq C_d \|\phi\|_{\infty}  \max(r_1 n_1^{-\frac{1}{d_1}}, r_2 n_2^{-\frac{1}{d_2}}) |Df|(\Omega),
+%\end{equation}		
+%	whenever $f\in C^1(\bar\Omega)$, where $\tilde C_f$ stands for the minimum cost among $q_i$ continuous (hence constant) over rectangles.
+%	\end{proposition}	
+%
+%\begin{proof}
+%(Idea)	
+%Divide $(0, r_i)^{d_i}$ into $n_i$ rectangles $I_i^1,\ldots, I_i^{n_i}$ with centers $x_i^1,\ldots, x_i^{n_i}$ respectively, 
+%	and let $q_i(x):=x_i^j$ for $x\in I_i^j$, $j=1,\ldots, n_i$, 
+%	$i=1,2$. 
+%	Recalling that
+%	\begin{equation*}\label{eq_Estpoincare1}
+%	\int_{I_1^j\times I_1^k} |f(x)-f(x_1^j, x_2^k)|\, dx \leq C_d\mathrm{diam}\, (I_1^j\times I_1^k) |Df|(I_1^j\times I_1^k),
+%	\end{equation*}
+%	we get 
+%	\begin{equation*}\label{eq_Estpoincare2}
+%\begin{aligned}	
+%\int_{I_1^j\times I_1^k} |f(x_1, x_2)-f(q_1(x_1), q_2(x_2))|\,dx_1\, dx_2 &
+% \leq C_d \max \left(r_1 n_1^{-\frac{1}{d_1}}, r_2 n_2^{-\frac{1}{d_2}} \right)|Df|(I_1^j\times I_1^k),
+%\end{aligned}	
+%\end{equation*}
+%(the constant $C_d$ being different in different estimates, but always depending only on $d$),
+%and summing the above relationships over all $j$ and $k$, we get
+%\begin{equation*}\label{eq_Estpoincare2}
+%\begin{aligned}	
+%\int_{\Omega} |f(x_1, x_2)-f(q_1(x_1), q_2(x_2))|\,d\mu(x_1,x_2) &\leq 
+%\|\phi\|_\infty \int_{\Omega} |f(x_1, x_2)-f(q_1(x_1), q_2(x_2))|\,dx_1\, dx_2 \\
+%& \leq C_d \|\phi\|_\infty\max \left(r_1 n_1^{-\frac{1}{d_1}}, r_2 n_2^{-\frac{1}{d_2}}\right) |Df|(\Omega),
+%\end{aligned}	
+%\end{equation*}
+%which shows~\eqref{eq_upestBV1C1}.
+%\end{proof}
+
+\begin{lemma}\label{lm_estLipMax}
+	Let $A_i \subset \mathcal{X}_i$ be open rectangles and $f\in C^1(\bar A_1\times\ldots\times \bar A_d)$. Then 
+		\begin{equation*}\label{eq_Estpoincare1a}
+	\int_{A_1 \times \ldots \times A_d} |f(\v x)-f(\v a)|\, d\v x \leq C_k\mathrm{diam}\, (A_1 \times \ldots \times A_d) \mathcal{L}^k (A_1 \times \ldots \times A_d) M^*|\nabla f|(\v a),
+	\end{equation*}
+	%for all $z\in I_1\times I_2$, 
+	where  $M^*$ stands for the uncentered maximal function.
+\end{lemma}
+
+\begin{proof}
+	We denote for brevity $\v \Omega = A_1 \times \ldots \times A_d$ and $D:=\mathrm{diam}\, (\v A)$ and write
+	\[
+	f(\v x)-f(\v a)=\int_0^1\frac{d\,}{dt} f(t \v x+(1-t) \v a)\, dt,
+	\]
+	so that
+	\begin{align*}
+	\int_{\v \Omega} |f(\v x)-f(\v a)|\, d\v x 
+	&\leq \int_{\v \Omega} \, d\v x \int_0^1 \left|\frac{d\,}{dt} f(t \v x+(1-t)\v a)\right|\, dt \\
+	& \leq D \int_{\v \Omega} \, d\v x \int_0^1 \left|\nabla f\right|(t \v x+(1-t)\v a)\, dt\\
+	& = D \int_0^1 \frac{\,dt}{t^d}\int_{(1-t)\v a +t\v A} \left|\nabla f\right|(w) \, dw\\
+	& = D \int_0^1 \frac{\,dt}{t^d} t^d \mathcal{L}^d(\v \Omega) \fint_{(1-t)\v a +t\v A} \left|\nabla f\right|(w) \, dw
+	\\& \leq  D \mathcal{L}^d(\v \Omega) M^*|\nabla f| (\v a)
+			\end{align*}
+			as claimed.
+\end{proof}
+
+
+	\begin{theorem} 
+		Let $A_i\subset \mX_i$ be open cubes of sidelength $r_i$,
+		$\Omega:= A_1 \times \ldots \times A_d$,
+		$f\in W^{1,p}(\Omega)$, $p\geq 1$.		
+	If $\mu\ll dx$ with density $\varphi\in L^\infty(\R^k)$ has compact support $\supp \varphi \subset \Omega$, while  $d(u, v) = |u-v|$, then
+\begin{equation}\label{eq_upestSobolev1}
+\begin{aligned}
+C_f(\v n)&\leq 
+C_k \|\varphi\|_\infty \|M^*|\nabla f|\|_1 \max_i (r_i n_i^{-1/k_i})
++ o\left( \max_i (r_i n_i^{-1/k_i})\right) 
+\end{aligned}
+\end{equation}
+as $n_1, \ldots, n_d \to\infty$, where $M^*$ stands fro the uncentered maximal function.
+ 
+Moreover, if $p>1$, then  
+\begin{equation}\label{eq_upestSobolev2}
+\begin{aligned}
+C_f(\v n)&\leq 
+C_{k,p} \|\varphi\|_\infty \|\nabla f\|_p \max_i (r_i n_i^{-1/k_i}) + o\left( \max_i (r_i n_i^{-1/k_i})\right). 
+\end{aligned}
+\end{equation}
+\end{theorem}	
+
+\begin{proof}
+	We approximate $f\in W^{1,p}(\Omega)$ by $f_k\in C^1(\bar\Omega)$ converging 
+	in Sobolev norm, and in particular with
+	$\lim_k f_k(y)= f(y)$ and
+	$\lim_k M^*|\nabla f_k|(y)=  M^*|\nabla f|(y)$ for a.e. $y\in \Omega$, i.e. for all $y\in \Omega\setminus N$ with
+	$\mathcal{L}^d (N)=0$.
+	
+	It is enough to prove the statement for $n_i^{1/k_i} \in \mathbb{Z} \forall i\in \{1, \ldots, d\}$, otherwise one could take $m_i = \lfloor n_i^{1/k_i}\rfloor ^ {d_i}$ with $m_i^{1/k_i} \leq n_i^{1/k_i} \leq 2m_i^{1/k_i}$. Then the inequalities for $m_i$ combined with
+	\[
+	C_f(\v n)\leq C_f(\v m ) \qquad \mbox{and} \qquad \max_i (r_i m_i^{-1/k_i}) \leq 2 \max_i (r_i n_i^{-1/k_i})
+	\]
+	would imply the estimate for any $n_i$ with a twice bigger constant.
+	
+Divide each $A_i$ into $n_i$ rectangles $A_i^1,\ldots, A^{n_1}_i$ and take $a_1^{s_1}\in A_1^{s_1}, \ldots, a_{d}^{s_d} \in A_d^{s_d}$, such that $(a_1^{s_1}, \ldots, a_d^{s_d})\not\in N$ for all $s_i \in \{1, \ldots, n_i\}, i\in\{1,\ldots, d\}$. 
+Define then $q_i$ by setting
+\[
+q_i (x):= a_{i}^{s}\;\mbox{whenever }x\in A_i^s.  
+\]
+Denote $A_{\v s} = A_1^{s_1} \times \ldots A_d^{s_d}$ and $a_{\v s} = a_1^{s_1}, \ldots, a_d^{s_d}$. Recalling that Lemma~\ref{lm_estLipMax} implies
+\begin{equation*}\label{eq_Estpoincare1}
+\int_{A_{\v s}} |f_k(\v x)-f_k(a_{\v s})|\, d\v x \leq C_k\mathrm{diam}\, (A_{\v s}) \mathcal{L}^k (A_{\v s}) M^*|\nabla f_k|(a_{\v s}).
+\end{equation*}
+Summing up these inequalities,
+we get 
+\begin{equation}\label{eq_Estpoincare2}
+\begin{aligned}
+\int_{\Omega} & |f_k(\v x)-f_k(q_1(x_1), \ldots, q_d(x_d))|\, d\v x  \leq C_k \max_i \left(r_i n_i^{-1/k_i}\right) 
+\Delta(f_k, \Omega, \v n),\\
+&\mbox{where } 
+\Delta(f_k, \Omega, \v n):=	\sum_{s_1=1}^{n_1}\ldots \sum_{s_d=1}^{n_d} \mathcal{L}^k (A_1^{s_1}\times\ldots\times A_d^{s_d})
+ M^*|\nabla f_k|(a_1^{s_1},\ldots, a_d^{s_d}).
+\end{aligned}
+\end{equation}
+Passing to the limit as $k\to\infty$ in~\eqref{eq_Estpoincare2}, one arrives by Fatou's lemma at
+\begin{equation}\label{eq_Estpoincare3}
+\begin{aligned}
+\int_{\Omega} |f(\v x)-f(q_1(x_1), \ldots, q_d(x_d))|\, d\v x& \leq \liminf_k
+\int_{\Omega} |f_k(\v x)-f_k(q_1(x_1), \ldots, q_d(x_d))|\, d\v x\\
+& \leq C_k \max\max_i \left(r_i n_i^{-1/k_i}\right)
+\Delta(f, \Omega, \v n).
+\end{aligned}
+\end{equation}
+Since $M^*|\nabla f|$ is continuous, one has
+\[
+\Delta(f, \Omega, \v n)\to \int_\Omega M^*|\nabla f|(\v x)\, d\v x
+\]
+as $n_1, \ldots, n_d \to \infty$, and hence~\eqref{eq_Estpoincare3} gives
+\begin{equation}\label{eq_Estpoincare4}
+\begin{aligned}
+C_f(\v n)&\leq \int_{\Omega} |f(\v x)-f(q_1(x_1), \ldots, q_d(x_d))|\, d\mu(\v x) \\
+& \leq  
+\|\varphi\|_\infty \int_{\Omega} |f(\v x)-f(q_1(x_1), \ldots, q_d(x_d))|\, d\v x \\
+& \leq 
+C_k \|\varphi\|_\infty \|M^*|\nabla f|\|_1\max_i \left(r_i n_i^{-1/k_i}\right) + o\left( \max_i \left(r_i n_i^{-1/k_i}\right) \right) 
+\end{aligned}
+\end{equation}
+as $n_1, \ldots, n_d \to \infty$, which is~\eqref{eq_upestSobolev1}
+In particular, if $p>1$, then estimating   $\|M^*|\nabla f|\|_1$ by Hardy-Littlewood theorem, we get~\eqref{eq_upestSobolev2}.
+\end{proof}
+
+\begin{remark}
+	When $N = n_1 + \ldots + n_d$ is fixed, the upper estimate is minimum at
+	\[
+	n_i = \frac{N r_i^{k_i}}{\sum_i r_i^{k_i}},
+	\]
+	hence providing the following estimates for $C_f(N) = \min_{\sum n_i = N} C_f(\v n)$
+	\[
+	C_f(N) \leq C_k\|\phi\|_{\infty} \|M^* |\nabla f| \|_1 \max_i \left(\frac{\sum_i r_i^{k_i}}{N}\right)^{1/k_i} + o\left( \max_i\left( \frac{\sum_i r_i^{k_i}}{N}\right)^{1/k_i}\right) ,
+	\]
+	as $N\to\infty$. Moreover, for $p>1$
+	\[
+	C_f(N) \leq C_{k, p}\|\phi\|_{\infty} \| \nabla f \|_p \max_i\left(\frac{\sum_i r_i^{k_i}}{N}\right)^{1/k_i} + o\left(\max_i \left( \frac{\sum_i r_i^{k_i}}{N}\right)^{1/k_i}\right) .
+	\]
+	
+\end{remark}	
+
+
+
+\section{Technical proofs}
+	\label{section_tech_proofs}
+\subsection{Proof of lemma \ref{lemma_lagrange}}
+	\begin{proof}
+{\sc Step 1}. 
+
+We first show that the righthand side of~\eqref{eq_est_n12int1} is non-increasing with respect to $n_i$. 
+Consider the following functional operator, that transforms $p$ into 
+\begin{equation}
+	\label{eqn_D}
+Dp(x_1, \ldots, x_d) = \sum_{\eps_1 \in \{-1, 1\}} \sum_{\eps_2 \in \{-1, 1\}} \ldots \sum_{\eps_d \in \{-1, 1\}} p(|\sum_i \eps_i x_i|)
+\end{equation}
+Note, that the integral can be rewritten in the following form
+\[
+\int_0^{\omega_1/2}\ldots \int_0^{\omega_d/2} Dp(x_1/n_1, \ldots, x_d/n_d)\,dx.
+\]
+The inner function is decreasing in $n_1$ and $n_2$ due to lemma \ref{lemma_D_incr}. Therefore, the integral is also decreasing in $n_1$ and $n_2$.
+\begin{lemma}
+	\label{lemma_1}
+For a convex and strictly increasing on $[0, \infty)$ function $p(\cdot)$ and a fixed $t_0$ the function $t \to p(|t+t_0|) + p(|t - t_0|)$ is increasing on $t \geq 0$.
+\end{lemma}
+\begin{proof}
+First, without loss of generality we might assume $t_0 \geq 0$. The derivative of this function is $p'(|t+t_0|) + p'(|t-t_0|) \textrm{sgn}(t - t_0)$. Since $p'(\cdot)$ is increasing and $|t+t_0| > |t - t_0|$ for $t_0, t > 0$, the derivative is positive.
+\end{proof}
+\begin{lemma}
+	\label{lemma_D_incr}
+For a convex and strictly increasing on $[0, \infty)$ function $p(\cdot)$ and fixed $x_2, \ldots, x_d$ the function $x_1 \to Dp(x_1, \ldots, x_d)$ is increasing on $x_1 \geq 0$.
+\end{lemma}
+\begin{proof}
+Recall that
+\[
+Dp(x_1, \ldots, x_d) = \sum_{\eps_1 \in \{-1, 1\}} \ldots \sum_{\eps_d \in \{-1, 1\}} p(|\sum_i \eps_i x_i|).
+\]
+Since $|\sum_i \eps_i x_i| = |\sum_i -\eps_i x_i|$, we can fix $\eps_1 = 1$ and rewrite
+\[
+Dp(x_1, \ldots, x_d) = 2\sum_{\eps_2 \in \{-1, 1\}} \ldots \sum_{\eps_d \in \{-1, 1\}} p(|x_1 + \sum_{i=2}^d \eps_i x_i |).
+\]
+Now, from lemma \ref{lemma_1} we obtain that for any particular choice of $\eps_i$ the sum
+\[
+p(|x_1 + \sum_{i=2}^d \eps_i x_i|) + p(|x_1 + \sum_{i=2}^d -\eps_i x_i|)
+\]
+is increasing on $x_1\geq 0$. Now, we sum this over all choices of $\eps_i$ and get exactly $Dp(x_1, \ldots, x_d)$. Consequently, $Dp$ is increasing in $x_1$ for $x_1 \geq 0$.
+\end{proof}
+
+			
+{\sc Step 2}. We now prove the claim. Assuming that there is a set of numbers $((a_i), (b_j))$ for which  inequality~\eqref{eq_est_n12int1} fails, take the one with minimal $n_1+n_2$. For convenience $(a_i)$ and $(b_j)$ are nondecreasing sequences. Consider the left hand side as a function $F(a_1, \ldots, a_n)$ on a compact set $a_i \geq 0$, $\sum_i a_i = a/2$. By the extreme value theorem $F$ attains its minimum at some point $(\tilde a_i)$ also being contrary to the inequality. If some of the $\tilde a_i$ was $0$, we could remove it from the set $((\tilde a_i), (b_j))$, obtaining a smaller set of variables not satisfying the inequality, because the right hand side is decreasing with respect to $n_1$ and $n_2$. Therefore, $(\tilde a_i)$ is an interior point of a compact set we are working with. Thus, method of Lagrange multipliers provides us with the following equations on $(\tilde a_i)$: for some scalar $\lambda$ and $\sigma$ that are not $0$ at the same time
+		\[
+		\lambda \cdot \nabla F(\tilde a_1, \ldots, \tilde a_n) = \sigma \cdot \nabla G(\tilde a_1, \ldots, \tilde a_n) = \sigma \cdot (1, 1, \ldots, 1).
+		\]
+		Note that $\lambda \neq 0$, otherwise we would get $\sigma = 0$ too. Then, in coordinate form we get that for all $i$
+		\[
+		\frac{\partial F}{\partial a_i} (\tilde a_1, \ldots, \tilde a_n)= \frac{\partial F}{\partial a_j} (\tilde a_1, \ldots, \tilde a_n).
+		\]
+		Note that 
+		\begin{eqnarray*}
+			\frac{\partial F}{\partial a_i} (\tilde a_1, \ldots, \tilde a_n) 
+			= \sum_{j=1}^{n_2} \int_{0}^{b_j} p(|\tilde a_i+y|)+p(|\tilde a_i-y|)\,dy.
+		\end{eqnarray*}
+		Due to the lemma \ref{lemma_D_incr}, the derivative is strictly growing with respect to $\tilde a_i$.		
+		
+		Therefore, under the Lagrange condition we obtained, one has $\tilde a_1 = \ldots = \tilde a_{n_1}$. Now apply similar argument to $(b_1, \ldots, b_{n_2})$ and get that the minimum with respect to $(b_j)$ has to be at $b_1 = \ldots = b_{n_2}$. Consequently the inequality should not be true for some $n_1, n_2$ and $a_i = \frac{a}{2n_1}, b_j = \frac{b}{2n_2}$. But this is exactly the point of equality.
+	\end{proof}
+
+\subsection{Proof of the remark \ref{rem_linear}}
+\begin{proof}
+	We want to prove that the minimum is attained when all $n_i/w_i$ are equal. Let us show, that if we fix $n_1 n_2$ and shift $n_1$ and $n_2$ towards the point $n_1/w_1 = n_2/w_2$ then the functional decreases. After that, from symmetry we obtain that this is true for any pair $n_i, n_j$. Finally, we use a standard argument. Denote $\alpha = (\prod n_i/w_i)^{1/d}$. If not all $n_i/w_i$ are equal to $\alpha$, pick $n_j/w_j < \alpha$ and $n_k/w_k > \alpha$. Then we can shift $n_j/w_j$ and $n_k/w_k$ towards each other with a fixed product in a way that one of them becomes $\alpha$. This operation does not change $n_1 \ldots n_d$, decreases total number of $n_i$ such that $n_i \neq \alpha w_i$ and decreases the functional. Therefore, any choice of $n_1, \ldots, n_d$ can be transformed into $\alpha w_1, \ldots, \alpha w_d$ and the functional decreases along the way.
+	
+	
+	In order to prove a simplified statement we denote $t = \frac{w_1}{2n_1}$ and $\frac{c}{t} = \frac{w_2}{2n_2}$, where $c$ is fixed and w.l.o.g. $w_1/n_1 > w_2/n_2$. Then shift towards equilibrium is equivalent to a reduction of $t$, therefore our goal is to show that the derivative of the error with respect to $t$ is positive for $t > c/t$. Let us remind that the error is of the form
+	\[
+	 \frac{\prod_i n_i}{\prod_i w_i} \int_{-\frac{w_1}{2n_1}}^{\frac{w_1}{2n_1}}\ldots \int_{-\frac{w_d}{2n_d}}^{\frac{w_d}{2n_d}} p\left(\left|\sum_{i} x_i\right|\right)\, dx_d \ldots dx_1.
+	 \]
+	Using symmetry and an operator $D$ defined in \eqref{eqn_D} we can rewrite this integral as follows
+	\[
+	\frac{\prod_i n_i}{\prod_i w_i} \int_{0}^{\frac{w_1}{2n_1}} \int_{0}^{\frac{w_2}{2n_2}} \ldots \int_0^{\frac{w_d}{2n_d}}(Dp)(x_1, x_2, \ldots, x_d)\,dx_d \ldots dx_1.
+	\]
+	For simplicity denote $W_{+} = [0, \frac{w_3}{2n_3}] \times \ldots \times [0, \frac{w_d}{2n_d}]$. Let us also omit the constant factor. Finally, substitute $t$ and $c/t$ into the formula and get
+	\[
+	\int_{W_+}\int_0^t \int_0^{c/t} (Dp) (x_1, \ldots, x_d) \, dx_d \ldots dx_1.
+	\]
+	Its derivative with respect to $t$ is
+	\[
+	\int_{W_+} dx_d \ldots dx_3 \left(\int_0^{c/t} (Dp)(t, x_2, \ldots, x_d) \, dx_2 - c t^{-2} \int_0^t (Dp) (x_1, c/t, x_3, \ldots, x_d) \, dx_1\right).
+	\]
+	We aim to prove its positivity, thus it is enough to show that the inner part is greater than zero. Now, change the variables $y_2 = t x_2$ and $y_1 = c/t x_1$ in order to make these integrals more similar. The expression becomes
+	\[
+	t^{-1}\int_0^c (Dp) (t, y_2/t, x_3, \ldots, x_d) dy_2 - t^{-1} \int_0^c (Dp) (ty_1/c, c/t, x_3, \ldots, x_d) dy_1.
+	\]
+	From the definition, $(Dp)$ is symmetric, thus we can rewrite this integral with a unified variable $z = y_2 = y_1$ 
+	\[
+	t^{-1}\int_0^c (Dp)(t, z/t, x_3, \ldots, x_d) - (Dp)(c/t, tz/c, x_3, \ldots, x_d ) dz.
+	\]
+	It suffices to prove that when $t > c/t > 0$ and $0 < z < c$ one has
+	\[
+	(Dp)(t, z/t, x_3, \ldots, x_d)  > (Dp) (c/t, tz/c, x_3, \ldots, x_d).
+	\]
+	Now, a simple symmetry argument allows to write the following formula
+	\[
+	(Dp)(x_1, x_2, \ldots, x_d) = 2(Dp)(x_1 + x_2, x_3, \ldots, x_d) + 2(Dp)(|x_1 - x_2|, x_3, \ldots, x_d).
+	\]
+	This representation reduces our statement to two easier ones
+	\[
+	\begin{cases}
+	Dp(t + z/t, x_3, \ldots, x_d) > Dp(c/t + tz/c, x_3, \ldots, x_d), \\
+	Dp(|t - z/t|, x_3, \ldots, x_d) > Dp(|c/t - tz/c|, x_3, \ldots, x_d).
+	\end{cases}
+	\]
+	Lemma \ref{lemma_D_incr} simplifies even further to the form
+	\[
+	t + z/t > c/t + tz/c, \qquad \mbox{and } \qquad |t - z/t| > |c/t - tz/c|.
+	\]
+	The first one is equivalent to $(t - c/t)(1 - z/c) > 0$, which is true under our assumptions.
+	To prove the second one it is enough to check that
+	\[
+	\begin{cases}
+		t - z/t > c/t - tz/c \\
+		t - z/t > tz/c - c/t.
+	\end{cases}
+	\]
+	These inequalities are equivalent to the following trivial ones
+	\[
+	\begin{cases}
+		(t - c/t)(1 + z/c) > 0 \\
+		(t + c/t)(1 - z/c) > 0.
+	\end{cases}
+	\]	
+\end{proof}	
+
+
+
+\begin{thebibliography}{99}
+	
+	{\baselineskip=10pt \small
+		
+		\bibitem{Ioffe} A. D. Ioffe, {\it On Lower Semicontinuity of Integral Functionals. I},
+		{\sc SIAM Journal on Control and Optimization.}, Vol. 15, Iss. 4 (1977) https://doi.org/10.1137/0315035
+		
+	} %% end baselineskip
+	
+\end{thebibliography}
+
+\end{document}
+
